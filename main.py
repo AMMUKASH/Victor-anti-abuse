@@ -47,20 +47,21 @@ async def start_cmd(client, message):
     
     # --- YAHAN NAYA BEST CAPTION HAI ---
     VIP_CAPTION = (
-        f"🛡️ **Wᴇʟᴄᴏᴍᴇ Tᴏ Xᴇɴᴏ Aɴᴛɪ-Aʙᴜꜱᴇ**\n"
+        f"🛡️ **Welcome To Xeno Anti-Abuse**\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"ʜᴇʟʟᴏ {message.from_user.mention} ✨\n\n"
-        f"ɪ ᴀᴍ ᴛʜᴇ ᴍᴏꜱᴛ ᴘᴏᴡᴇʀꜰᴜʟ ɢᴜᴀʀᴅɪᴀɴ ꜰᴏʀ ʏᴏᴜʀ ɢʀᴏᴜᴘꜱ. "
-        f"ᴍᴀɪɴ ᴀᴅᴍɪɴꜱ ᴀᴜʀ ᴏᴡɴᴇʀ ᴋɪ ɢᴀʟɪʏᴀɴ ʙʜɪ ᴅᴇʟᴇᴛᴇ ᴋᴀʀ ᴅᴇᴛᴀ ʜᴏᴏɴ! 😎\n\n"
-        f"🚀 **ᴍʏ ᴋᴇʏ ꜰᴇᴀᴛᴜʀᴇꜱ:**\n"
-        f"✨ ᴀᴜᴛᴏ ᴀʙᴜꜱᴇ ᴅᴇʟᴇᴛɪᴏɴ (ɴᴏ ᴍᴇʀᴄʏ)\n"
-        f"✨ ɪɴꜱᴛᴀɴᴛ ꜱᴘᴀᴍ ᴘʀᴏᴛᴇᴄᴛɪᴏɴ\n"
-        f"✨ 24/7 ᴜʟᴛʀᴀ-ꜰᴀꜱᴛ ꜱᴘᴇᴇᴅ\n\n"
-        f"💡 **ʜᴏᴡ ᴛᴏ ᴜꜱᴇ:**\n"
-        f"ᴊᴜꜱᴛ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴀɴᴅ ᴍᴀᴋᴇ ᴍᴇ ᴀᴅᴍɪɴ!\n\n"
+        f"Hello {message.from_user.mention} ✨\n\n"
+        f"I am the most powerful guardian for your groups. "
+        f"Main admins aur owner ki galiyan bhi delete kar deta hoon! 😎\n\n"
+        f"🚀 **My Key Features:**\n"
+        f"✨ Auto Abuse Deletion (No Mercy)\n"
+        f"✨ Instant Spam Protection\n"
+        f"✨ 24/7 Ultra-Fast Speed\n\n"
+        f"💡 **How To Use:**\n"
+        f"Just add me to your group and make me admin!\n\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"📢 **ᴄᴏᴍᴍᴀɴᴅꜱ:** `/help` | `/broadcast`"
+        f"📢 **Commands:** `/help` | `/broadcast`"
     )
+
     # ----------------------------------
 
     try:
