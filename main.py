@@ -113,7 +113,7 @@ async def handle_abuse(client, message):
     if any(word in raw_text or word in clean_text for word in BAD_WORDS):
         try:
             await message.delete()
-                        # 📢 Log Group Report (Line 115 onwards)
+                        # 📢 Log Group Report (Fixed Format)
             log_text = (
                 "🚨 **ᴀʙᴜꜱᴇ ᴅᴇᴛᴇᴄᴛᴇᴅ**\n"
                 "━━━━━━━━━━━━━━━━━━━━\n"
