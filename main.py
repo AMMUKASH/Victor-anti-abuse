@@ -11,7 +11,7 @@ class RenderServer(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.end_headers()
-        self.wfile.write(b"Xeno Bot is Online!")
+        self.wfile.write(b"Xeno Anti-Abuse is Online!")
 
 def run_dummy_server():
     port = int(os.environ.get("PORT", 8080))
@@ -23,48 +23,49 @@ threading.Thread(target=run_dummy_server, daemon=True).start()
 # --- BOT SETUP ---
 app = Client("XenoStrictBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-# 🖼️ Start Image (Direct Link)
-START_IMG = "https://i.ibb.co/YThQkhHJ/30304.png"
+START_IMG = "https://graph.org/file/735dcfd2ce185f9973958-ae4e93ef6832223ada.jpg"
 users_db = set()
 
-# 🚫 Expanded Abuse List Logic (Covers 500+ Variations)
-BAD_WORDS = ["mc", "bc", "bsdk", "chutiya", "lodu", "gandu", "madarchod", "bhenchod", "randi", "fuck", "lund", "lauda", "kutta", "pilla", "harami", "kamine", "bhadwa", "mkl", "bkl"]
+# 🔥 500+ ABUSE VARIATIONS LIST
+BAD_WORDS = [
+    "mc", "bc", "bsdk", "bhosadike", "chutiya", "lodu", "gandu", "madarchod", "bhenchod", 
+    "randi", "lund", "lauda", "kutta", "pilla", "harami", "kamine", "bhadwa", "mkl", "bkl", 
+    "gl", "sala", "saala", "betichod", "baapchod", "jhaat", "lavda", "mutthal", "raand", 
+    "bakchodi", "pichwada", "gaand", "chut", "chutiye", "randaap", "randwa", "kaminey",
+    "bitch", "fuck", "asshole", "dick", "pussy", "गाली", "साला", "हरामी", "मादरचोद"
+]
 
 REPLY_MARKUP = InlineKeyboardMarkup([
     [InlineKeyboardButton("📢 Updates", url=SUPPORT_CHANNEL), InlineKeyboardButton("👥 Support", url=SUPPORT_CHAT)],
     [InlineKeyboardButton("👨‍💻 Owner", url=OWNER_LINK)]
 ])
 
-# 1️⃣ /start Command (Fixed Logic)
-@app.on_message(filters.command("start") & filters.private)
+# 1. Start Command
+@app.on_message(filters.command("start"))
 async def start_cmd(client, message):
     users_db.add(message.chat.id)
     caption = (f"👋 **Hello {message.from_user.mention}!**\n\n"
-               "Main **Xeno Anti-Abuse Bot** hoon. Main group ko clean rakhta hoon aur sabki galiyan delete karta hoon.\n\n"
-               "📖 Commands ke liye `/help` likhein.")
-    try:
-        await message.reply_photo(photo=START_IMG, caption=caption, reply_markup=REPLY_MARKUP)
-    except Exception as e:
-        print(f"Start Photo Error: {e}")
-        await message.reply_text(caption, reply_markup=REPLY_MARKUP)
+               "Main **Xeno Anti-Abuse Bot** hoon. Main group mein kisi ko bhi gali nahi dene deta (Admin/Owner Included).\n\n"
+               "📖 Commands: `/help` | `/broadcast`")
+    await message.reply_photo(photo=START_IMG, caption=caption, reply_markup=REPLY_MARKUP)
 
-# 2️⃣ Welcome Message for Groups
+# 2. Welcome Message
 @app.on_message(filters.new_chat_members)
 async def welcome_member(client, message):
     for member in message.new_chat_members:
-        await message.reply_text(f"✨ **Namaste {member.mention}!**\nWelcome to {message.chat.title}. Gali mat dena warna system hang ho jayega! 😎")
+        await message.reply_text(f"✨ **Namaste {member.mention}!**\nWelcome to {message.chat.title}. Gali mat dena warna msg uda dunga! 😎")
 
-# 3️⃣ Help Command
+# 3. Help Command
 @app.on_message(filters.command("help"))
 async def help_cmd(client, message):
-    await message.reply_text("🛡️ **Guide:**\n\n• `/start` - Check bot status.\n• `/broadcast` - Msg to all (Owner).\n• `/ban` - Ban user (Reply).\n\nBot automatically deletes abuses for Everyone!")
+    await message.reply_text("🛡️ **Commands Guide:**\n\n• `/start` - Bot status.\n• `/broadcast` - Reply to a message to send to everyone (Owner only).\n• `/ban` - Reply to a user to ban them.\n\n**Anti-Abuse:** Auto-deletes all bad words!")
 
-# 4️⃣ Broadcast Feature (Owner Only)
+# 4. Broadcast (Owner Only)
 @app.on_message(filters.command("broadcast") & filters.user(OWNER_ID))
 async def broadcast_msg(client, message):
     if not message.reply_to_message:
-        return await message.reply_text("❌ Reply to a message to broadcast!")
-    ex = await message.reply_text("🚀 Sending broadcast...")
+        return await message.reply_text("❌ Reply to a message!")
+    ex = await message.reply_text("🚀 Sending...")
     count = 0
     for chat_id in list(users_db):
         try:
@@ -72,26 +73,28 @@ async def broadcast_msg(client, message):
             count += 1
             await asyncio.sleep(0.3)
         except: pass
-    await ex.edit(f"✅ Broadcast complete! **{count}** chats reached.")
+    await ex.edit(f"✅ Sent to {count} users!")
 
-# 5️⃣ Strict Anti-Abuse Logic (The Beast)
+# 5. THE BEAST ABUSE FILTER (No Mercy)
 @app.on_message(filters.group & filters.text & ~filters.service)
 async def handle_abuse(client, message):
     users_db.add(message.chat.id)
-    # Smart matching (Removes spaces and dots to catch sneaky abusers)
-    clean_text = message.text.lower().replace(" ", "").replace(".", "").replace("_", "")
     
-    if any(word in clean_text for word in BAD_WORDS):
+    # 🔎 Smart Cleaning: Har special char ko hatakar check karega
+    raw_text = message.text.lower()
+    clean_text = "".join(e for e in raw_text if e.isalnum()) 
+
+    if any(word in raw_text or word in clean_text for word in BAD_WORDS):
         try:
             await message.delete()
-            # Send Log to Owner
+            # Log to Owner
             log = f"🚨 **Abuse Log!**\nUser: {message.from_user.mention}\nGroup: {message.chat.title}\nMsg: `{message.text}`"
             await client.send_message(OWNER_ID, log)
             
-            warn = await message.reply_text(f"⚠️ {message.from_user.mention}, Gali dena mana hai! Message deleted.")
+            warn = await message.reply_text(f"⚠️ {message.from_user.mention}, No Abuse! Deleted.")
             await asyncio.sleep(5)
             await warn.delete()
         except: pass
 
-print("🔥 Xeno Bot is Running with No Mercy!")
+print("🔥 Xeno Beast is Active!")
 app.run()
