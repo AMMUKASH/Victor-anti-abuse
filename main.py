@@ -45,22 +45,23 @@ REPLY_MARKUP = InlineKeyboardMarkup([
 async def start_cmd(client, message):
     users_db.add(message.chat.id)
     
-    # --- YAHAN NAYA BEST CAPTION HAI ---
+        # --- YAHAN NAYA BEST CAPTION HAI ---
     VIP_CAPTION = (
-        f"🛡️ **Welcome To Xeno Anti-Abuse**\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        "🛡️ **Welcome To Xeno Anti-Abuse**\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
         f"Hello {message.from_user.mention} ✨\n\n"
-        f"I am the most powerful guardian for your groups. "
-        f"Main admins aur owner ki galiyan bhi delete kar deta hoon! 😎\n\n"
-        f"🚀 **My Key Features:**\n"
-        f"✨ Auto Abuse Deletion (No Mercy)\n"
-        f"✨ Instant Spam Protection\n"
-        f"✨ 24/7 Ultra-Fast Speed\n\n"
-        f"💡 **How To Use:**\n"
-        f"Just add me to your group and make me admin!\n\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"📢 **Commands:** `/help` | `/broadcast`"
+        "I am the most powerful guardian for your groups. "
+        "Main admins aur owner ki galiyan bhi delete kar deta hoon! 😎\n\n"
+        "🚀 **My Key Features:**\n"
+        "✨ Auto Abuse Deletion (No Mercy)\n"
+        "✨ Instant Spam Protection\n"
+        "✨ 24/7 Ultra-Fast Speed\n\n"
+        "💡 **How To Use:**\n"
+        "Just add me to your group and make me admin!\n\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "📢 **Commands:** `/help` | `/broadcast`"
     )
+
 
     # ----------------------------------
 
