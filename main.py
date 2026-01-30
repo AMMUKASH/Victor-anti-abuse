@@ -40,14 +40,37 @@ REPLY_MARKUP = InlineKeyboardMarkup([
     [InlineKeyboardButton("👨‍💻 Owner", url=OWNER_LINK)]
 ])
 
-# 1. Start Command
-@app.on_message(filters.command("start"))
+# 1️⃣ START COMMAND (VIP Caption)
+@app.on_message(filters.command("start") & filters.private)
 async def start_cmd(client, message):
     users_db.add(message.chat.id)
-    caption = (f"👋 **Hello {message.from_user.mention}!**\n\n"
-               "Main **Xeno Anti-Abuse Bot** hoon. Main group mein kisi ko bhi gali nahi dene deta (Admin/Owner Included).\n\n"
-               "📖 Commands: `/help` | `/broadcast`")
-    await message.reply_photo(photo=START_IMG, caption=caption, reply_markup=REPLY_MARKUP)
+    
+    # --- YAHAN NAYA BEST CAPTION HAI ---
+    VIP_CAPTION = (
+        f"🛡️ **Wᴇʟᴄᴏᴍᴇ Tᴏ Xᴇɴᴏ Aɴᴛɪ-Aʙᴜꜱᴇ**\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"ʜᴇʟʟᴏ {message.from_user.mention} ✨\n\n"
+        f"ɪ ᴀᴍ ᴛʜᴇ ᴍᴏꜱᴛ ᴘᴏᴡᴇʀꜰᴜʟ ɢᴜᴀʀᴅɪᴀɴ ꜰᴏʀ ʏᴏᴜʀ ɢʀᴏᴜᴘꜱ. "
+        f"ᴍᴀɪɴ ᴀᴅᴍɪɴꜱ ᴀᴜʀ ᴏᴡɴᴇʀ ᴋɪ ɢᴀʟɪʏᴀɴ ʙʜɪ ᴅᴇʟᴇᴛᴇ ᴋᴀʀ ᴅᴇᴛᴀ ʜᴏᴏɴ! 😎\n\n"
+        f"🚀 **ᴍʏ ᴋᴇʏ ꜰᴇᴀᴛᴜʀᴇꜱ:**\n"
+        f"✨ ᴀᴜᴛᴏ ᴀʙᴜꜱᴇ ᴅᴇʟᴇᴛɪᴏɴ (ɴᴏ ᴍᴇʀᴄʏ)\n"
+        f"✨ ɪɴꜱᴛᴀɴᴛ ꜱᴘᴀᴍ ᴘʀᴏᴛᴇᴄᴛɪᴏɴ\n"
+        f"✨ 24/7 ᴜʟᴛʀᴀ-ꜰᴀꜱᴛ ꜱᴘᴇᴇᴅ\n\n"
+        f"💡 **ʜᴏᴡ ᴛᴏ ᴜꜱᴇ:**\n"
+        f"ᴊᴜꜱᴛ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴀɴᴅ ᴍᴀᴋᴇ ᴍᴇ ᴀᴅᴍɪɴ!\n\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"📢 **ᴄᴏᴍᴍᴀɴᴅꜱ:** `/help` | `/broadcast`"
+    )
+    # ----------------------------------
+
+    try:
+        await message.reply_photo(
+            photo=START_IMG, 
+            caption=VIP_CAPTION, 
+            reply_markup=REPLY_MARKUP
+        )
+    except Exception:
+        await message.reply_text(VIP_CAPTION, reply_markup=REPLY_MARKUP)
 
 # 2. Welcome Message
 @app.on_message(filters.new_chat_members)
