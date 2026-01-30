@@ -1,91 +1,110 @@
-from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ChatPermissions
-from config import API_ID, API_HASH, BOT_TOKEN, SUPPORT_CHAT, SUPPORT_CHANNEL, OWNER_LINK, OWNER_ID
+import os
 import asyncio
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from pyrogram import Client, filters
+from pyrogram.types import ChatPermissions, InlineKeyboardMarkup, InlineKeyboardButton
+from config import API_ID, API_HASH, BOT_TOKEN, OWNER_ID, SUPPORT_CHAT, SUPPORT_CHANNEL, OWNER_LINK
 
-app = Client("XenoAntiAbuseBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+# --- RENDER PORT FIX (Dummy Server) ---
+class RenderServer(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Xeno Anti-Abuse Bot is Running!")
 
-# --- Sabse Badi Abuse List ---
+def run_dummy_server():
+    port = int(os.environ.get("PORT", 8080))
+    server = HTTPServer(('0.0.0.0', port), RenderServer)
+    server.serve_forever()
+
+threading.Thread(target=run_dummy_server, daemon=True).start()
+
+# --- BOT SETUP ---
+app = Client("XenoStrictBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+
+# Sabse Badi Abuse List (Hinglish + Hindi + English)
 BAD_WORDS = [
-    "mc", "bc", "mlc", "abc", "bsdk", "bhosadike", "bhosdike", "chutiya", "lodu", "gaandu", "gandu", 
-    "saala", "sala", "kamine", "kamina", "harami", "haramzada", "bhadwa", "bhadwe", "bhadwi",
-    "mkl", "bkl", "gl", "mc-bc", "pilla", "kutta", "suar", "pig", "madarchod", "maderchod", 
-    "madrchod", "bhenchod", "behenchod", "randi", "randwa", "rondi", "tatte", "jhaat", 
-    "lavda", "lawda", "lauda", "mutthal", "raand", "raandi", "betichod", "baapchod", 
-    "bakchod", "bakchodi", "pichwada", "gaand", "gand", "chut", "chutiye", "chutiyapa", 
-    "lund", "land", "lundfakir", "lode", "laude", "lawde", "pussy", "dick", "tits", 
-    "boobs", "asshole", "bitch", "bastard", "fuck", "fucker", "fucking", "गाली", 
-    "चूतिया", "लौडा", "लौड़े", "गाँडू", "भोसड़ीके", "मादरचोद", "बहनचोद", "बेंचो", "साला",
-    "teri maa ki", "maa chuda", "behen chuda", "behen k lode", "bhen k lode", "gand mara", 
-    "chudaap", "randaap", "randi rona"
+    "mc", "bc", "bsdk", "bhosadike", "chutiya", "lodu", "gandu", "saala", "kamine", 
+    "harami", "madarchod", "bhenchod", "randi", "randwa", "jhaat", "lavda", "lauda", 
+    "mutthal", "raand", "betichod", "bakchod", "gaand", "gand", "chut", "lund", "land", 
+    "lode", "laude", "fuck", "bitch", "asshole", "bastard", "dick", "pussy", "गाली", "साला",
+    "m.c", "b.c", "b.s.d.k", "m_c", "b_c", "l.o.d.u", "chutiyapa", "kutta", "pilla"
 ]
 
-# Warnings Store
-warns_db = {}
+users_db = set() # Broadcast ke liye IDs save karne ke liye
 
-# Professional Buttons
+# Buttons Setup
 REPLY_MARKUP = InlineKeyboardMarkup([
-    [
-        InlineKeyboardButton("📢 Updates", url=SUPPORT_CHANNEL),
-        InlineKeyboardButton("👥 Support", url=SUPPORT_CHAT)
-    ],
+    [InlineKeyboardButton("📢 Updates", url=SUPPORT_CHANNEL), InlineKeyboardButton("👥 Support", url=SUPPORT_CHAT)],
     [InlineKeyboardButton("👨‍💻 Owner", url=OWNER_LINK)]
 ])
 
+# 1. Start Command
 @app.on_message(filters.command("start"))
 async def start(client, message):
+    users_db.add(message.chat.id)
     await message.reply_text(
         f"👋 **Hello {message.from_user.mention}!**\n\n"
-        "Main ek powerful **Anti-Abuse Bot** hoon jo aapke group ko gandi bhasha se saaf rakhta hai.\n\n"
-        "🛡️ **Kaise use karein?**\n"
-        "1. Mujhe group mein add karein.\n"
-        "2. Admin banayein (Delete & Restrict permission).\n"
-        "3. Bas, baki kaam mera hai!",
+        "Main **Xeno Anti-Abuse Bot** hoon. Main Admin aur Owner samet sabki galiyan delete karta hoon.\n\n"
+        "📖 Commands ke liye `/help` likhein.",
         reply_markup=REPLY_MARKUP
     )
 
+# 2. Help Command
+@app.on_message(filters.command("help"))
+async def help_cmd(client, message):
+    help_text = (
+        "🛡️ **Admin & User Guide:**\n\n"
+        "• `/start` - Bot ko active check karein.\n"
+        "• `/help` - Ye menu dekhne ke liye.\n"
+        "• `/broadcast` - Sabhi users ko msg bhejne ke liye (Owner Only).\n"
+        "• `/ban` - User ko ban karne ke liye (Reply).\n\n"
+        "**Note:** Gali likhte hi message auto-delete ho jayega."
+    )
+    await message.reply_text(help_text, reply_markup=REPLY_MARKUP)
+
+# 3. Broadcast Feature (Owner Only)
+@app.on_message(filters.command("broadcast") & filters.user(OWNER_ID))
+async def broadcast(client, message):
+    if not message.reply_to_message:
+        return await message.reply_text("❌ Kisi message par reply karke `/broadcast` likhein!")
+    
+    msg = await message.reply_text("🚀 Sending broadcast...")
+    count = 0
+    for chat_id in list(users_db):
+        try:
+            await message.reply_to_message.copy(chat_id)
+            count += 1
+            await asyncio.sleep(0.3)
+        except: pass
+    await msg.edit(f"✅ Broadcast complete! **{count}** chats ko message mil gaya.")
+
+# 4. Strict Anti-Abuse Logic (No Mercy)
 @app.on_message(filters.group & filters.text & ~filters.service)
 async def handle_abuse(client, message):
-    # Admin/Owner check
-    try:
-        user_id = message.from_user.id
-        member = await client.get_chat_member(message.chat.id, user_id)
-        if member.status in ("administrator", "creator") or user_id == OWNER_ID:
-            return
-    except Exception:
-        pass
-
-    # Smart Filter: Spaces aur symbols hata kar check karna
-    raw_text = message.text.lower()
-    clean_text = raw_text.replace(" ", "").replace(".", "").replace("@", "a").replace("*", "")
-
-    # Check if any bad word is in the message
-    if any(word in raw_text or word in clean_text for word in BAD_WORDS):
+    users_db.add(message.chat.id) # Auto save group ID
+    
+    text = message.text.lower().replace(" ", "").replace(".", "").replace("@", "a")
+    
+    if any(word in text or word in message.text.lower() for word in BAD_WORDS):
         try:
             await message.delete()
-            
-            # Update Warnings
-            warns_db[user_id] = warns_db.get(user_id, 0) + 1
-            count = warns_db[user_id]
-
-            if count >= 3:
-                # 3 Warns = Mute
-                await client.restrict_chat_member(message.chat.id, user_id, ChatPermissions(can_send_messages=False))
-                await message.reply_text(
-                    f"🚫 **Action: Muted**\n\nUser: {message.from_user.mention}\nReason: 3/3 Warnings (Abuse)",
-                    reply_markup=REPLY_MARKUP
-                )
-                warns_db[user_id] = 0
-            else:
-                # Warning Message
-                warn_msg = await message.reply_text(
-                    f"⚠️ **Warning ({count}/3)**\n\n{message.from_user.mention}, kripya gandi bhasha ka use na karein!",
-                    reply_markup=REPLY_MARKUP
-                )
-                await asyncio.sleep(10)
-                await warn_msg.delete()
+            warn = await message.reply_text(f"⚠️ {message.from_user.mention}, No Abuse! Aapka message delete kar diya gaya hai.")
+            await asyncio.sleep(5)
+            await warn.delete()
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"Delete Error: {e}")
 
-print("✅ Anti-Abuse Bot is Started!")
+# 5. Ban Command
+@app.on_message(filters.command("ban") & filters.group)
+async def ban(client, message):
+    if message.reply_to_message:
+        try:
+            await client.ban_chat_member(message.chat.id, message.reply_to_message.from_user.id)
+            await message.reply_text("🚫 User successfully banned!")
+        except:
+            await message.reply_text("❌ Main is user ko ban nahi kar sakta (Shayad ye Admin hai).")
+
+print("✅ Bot is Fully Loaded with All Features!")
 app.run()
