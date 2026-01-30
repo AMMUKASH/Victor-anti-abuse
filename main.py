@@ -25,6 +25,7 @@ app = Client("XenoStrictBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TO
 
 START_IMG = "https://graph.org/file/735dcfd2ce185f9973958-ae4e93ef6832223ada.jpg"
 users_db = set()
+LOG_GROUP = -1003867805165  # <--- Yahan apni Log Group ID dalein
 
 # 🔥 500+ ABUSE VARIATIONS LIST
 BAD_WORDS = [
@@ -112,6 +113,18 @@ async def handle_abuse(client, message):
     if any(word in raw_text or word in clean_text for word in BAD_WORDS):
         try:
             await message.delete()
+                        # 📢 Log Group Report (Line 115 onwards)
+            log_text = (
+                "🚨 **ᴀʙᴜꜱᴇ ᴅᴇᴛᴇᴄᴛᴇᴅ**\n"
+                "━━━━━━━━━━━━━━━━━━━━\n"
+                f"👤 **ᴜꜱᴇʀ:** {message.from_user.mention}\n"
+                f"🆔 **ɪᴅ:** `{message.from_user.id}`\n"
+                f"👥 **ɢʀᴏᴜᴘ:** {message.chat.title}\n"
+                f"💬 **ᴍᴇꜱꜱᴀɢᴇ:** `{message.text}`\n"
+                "━━━━━━━━━━━━━━━━━━━━"
+            )
+            await client.send_message(LOG_GROUP, log_text)
+
             # Log to Owner
             log = f"🚨 **Abuse Log!**\nUser: {message.from_user.mention}\nGroup: {message.chat.title}\nMsg: `{message.text}`"
             await client.send_message(OWNER_ID, log)
