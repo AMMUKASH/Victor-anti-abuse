@@ -25,9 +25,9 @@ app = Client("XenoStrictBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TO
 
 START_IMG = "https://graph.org/file/735dcfd2ce185f9973958-ae4e93ef6832223ada.jpg"
 users_db = set()
-LOG_GROUP = -1003867805165  # <--- Yahan apni Log Group ID dalein
+LOG_GROUP = -1003867805165  # <--- Sahi ID Check kar lena
 
-# 🔥 500+ ABUSE VARIATIONS LIST
+# 🔥 ABUSE LIST
 BAD_WORDS = [
     "mc", "bc", "bsdk", "bhosadike", "chutiya", "lodu", "gandu", "madarchod", "bhenchod", 
     "randi", "lund", "lauda", "kutta", "pilla", "harami", "kamine", "bhadwa", "mkl", "bkl", 
@@ -36,62 +36,87 @@ BAD_WORDS = [
     "bitch", "fuck", "asshole", "dick", "pussy", "गाली", "साला", "हरामी", "मादरचोद"
 ]
 
-REPLY_MARKUP = InlineKeyboardMarkup([
-    [InlineKeyboardButton("📢 Updates", url=SUPPORT_CHANNEL), InlineKeyboardButton("👥 Support", url=SUPPORT_CHAT)],
-    [InlineKeyboardButton("👨‍💻 Owner", url=OWNER_LINK)]
+# --- KEYBOARDS ---
+START_MARKUP = InlineKeyboardMarkup([
+    [InlineKeyboardButton("📢 ᴜᴘᴅᴀᴛᴇꜱ", url=SUPPORT_CHANNEL), InlineKeyboardButton("👥 ꜱᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT)],
+    [InlineKeyboardButton("✨ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ✨", url=f"https://t.me/{(app.name if hasattr(app, 'name') else 'bot')}?startgroup=true")],
+    [InlineKeyboardButton("🛠 ʜᴇʟᴘ & ᴄᴏᴍᴍᴀɴᴅꜱ", callback_data="help_back")]
 ])
 
-# 1️⃣ START COMMAND (VIP Caption)
+# 1️⃣ START COMMAND + LOGS
 @app.on_message(filters.command("start") & filters.private)
 async def start_cmd(client, message):
-    users_db.add(message.chat.id)
-    
-        # --- YAHAN NAYA BEST CAPTION HAI ---
+    if message.chat.id not in users_db:
+        users_db.add(message.chat.id)
+        log_txt = (
+            "👤 **#ɴᴇᴡ_ᴜꜱᴇʀ**\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            f"**ɴᴀᴍᴇ:** {message.from_user.mention}\n"
+            f"**ɪᴅ:** `{message.from_user.id}`\n"
+            f"**ᴜꜱᴇʀ:** @{message.from_user.username if message.from_user.username else 'None'}"
+        )
+        await client.send_message(LOG_GROUP, log_txt)
+
     VIP_CAPTION = (
-        "🛡️ **Welcome To Xeno Anti-Abuse**\n"
+        "🛡️ **ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ xᴇɴᴏ ᴀɴᴛɪ-ᴀʙᴜꜱᴇ**\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"Hello {message.from_user.mention} ✨\n\n"
-        "I am the most powerful guardian for your groups. "
-        "Main admins aur owner ki galiyan bhi delete kar deta hoon! 😎\n\n"
-        "🚀 **My Key Features:**\n"
-        "✨ Auto Abuse Deletion (No Mercy)\n"
-        "✨ Instant Spam Protection\n"
-        "✨ 24/7 Ultra-Fast Speed\n\n"
-        "💡 **How To Use:**\n"
-        "Just add me to your group and make me admin!\n\n"
-        "━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        "📢 **Commands:** `/help` | `/broadcast`"
+        f"ʜᴇʟʟᴏ {message.from_user.mention} ✨\n\n"
+        "ᴍᴀɪɴ ᴀᴘᴋᴇ ɢʀᴏᴜᴘꜱ ᴋᴏ ɢᴀʟɪʏᴏɴ ᴀᴜʀ ꜱᴘᴀᴍ ꜱᴇ ʙᴀᴄʜᴀɴᴇ ᴋᴇ ʟɪʏᴇ ʙᴀɴᴀ ʜᴏᴏɴ. "
+        "ᴍᴜᴊʜᴇ ᴀᴅᴍɪɴ ʙᴀɴᴀᴏ ᴀᴜʀ ʙᴇꜰɪᴋᴀʀ ʜᴏ ᴊᴀᴏ! 😎\n\n"
+        "🚀 **ꜰᴇᴀᴛᴜʀᴇꜱ:**\n"
+        "✨ ᴀᴜᴛᴏ ᴀʙᴜꜱᴇ ᴅᴇʟᴇᴛɪᴏɴ\n"
+        "✨ ɪɴꜱᴛᴀɴᴛ ꜱᴘᴀᴍ ᴘʀᴏᴛᴇᴄᴛɪᴏɴ\n"
+        "✨ ᴜʟᴛʀᴀ-ꜰᴀꜱᴛ ꜱᴘᴇᴇᴅ"
     )
 
+    await message.reply_photo(photo=START_IMG, caption=VIP_CAPTION, reply_markup=START_MARKUP)
 
-    # ----------------------------------
-
-    try:
-        await message.reply_photo(
-            photo=START_IMG, 
-            caption=VIP_CAPTION, 
-            reply_markup=REPLY_MARKUP
-        )
-    except Exception:
-        await message.reply_text(VIP_CAPTION, reply_markup=REPLY_MARKUP)
-
-# 2. Welcome Message
-@app.on_message(filters.new_chat_members)
-async def welcome_member(client, message):
-    for member in message.new_chat_members:
-        await message.reply_text(f"✨ **Namaste {member.mention}!**\nWelcome to {message.chat.title}. Gali mat dena warna msg uda dunga! 😎")
-
-# 3. Help Command
+# 2️⃣ STYLISH HELP MENU
 @app.on_message(filters.command("help"))
 async def help_cmd(client, message):
-    await message.reply_text("🛡️ **Commands Guide:**\n\n• `/start` - Bot status.\n• `/broadcast` - Reply to a message to send to everyone (Owner only).\n• `/ban` - Reply to a user to ban them.\n\n**Anti-Abuse:** Auto-deletes all bad words!")
+    HELP_TEXT = (
+        "🛡️ **『 𝚇𝙴𝙽𝙾 𝚂𝚃𝚁𝙸𝙲𝚃 𝙱𝙾𝚃 𝙷𝙴𝙻𝙿 』**\n"
+        "━━━━━━━━━━━━━━━━━━━━━\n\n"
+        "🚀 **ᴜꜱᴇʀ ᴄᴏᴍᴍᴀɴᴅꜱ:**\n"
+        "• `/start` - ʙᴏᴛ ᴋᴏ ᴊɪɴᴅᴀ ᴋᴀʀᴇɪɴ\n"
+        "• `/help` - ʏᴇ ᴍᴇɴᴜ ᴅᴇᴋʜᴇɪɴ\n\n"
+        "⚙️ **ᴀᴅᴍɪɴ ꜰᴇᴀᴛᴜʀᴇꜱ:**\n"
+        "• `ᴀᴜᴛᴏ-ᴅᴇʟᴇᴛᴇ` - ɢᴀʟɪ ᴅᴇᴛᴇᴄᴛ ʜᴏᴛᴇ ʜɪ ᴍꜱɢ ᴋʜᴀᴛᴀᴍ\n"
+        "• `/ban` - ʀᴇᴘʟʏ ᴋᴀʀᴋᴇ ᴜꜱᴇʀ ᴋᴏ ʙᴀɴ ᴋᴀʀᴇɪɴ\n\n"
+        "👑 **ᴏᴡɴᴇʀ ᴄᴏᴍᴍᴀɴᴅꜱ:**\n"
+        "• `/broadcast` - ꜱᴀᴀʀᴇ ᴜꜱᴇʀꜱ ᴋᴏ ᴍꜱɢ ʙʜᴇᴊᴇɪɴ\n\n"
+        "━━━━━━━━━━━━━━━━━━━━━\n"
+        "💡 **ᴛɪᴘ:** ʙᴏᴛ ᴋᴏ ɢʀᴏᴜᴘ ᴍᴇɪɴ ꜰᴜʟʟ ᴀᴅᴍɪɴ ʀɪɢʜᴛꜱ ᴅᴇɪɴ!"
+    )
+    
+    HELP_BUTTONS = InlineKeyboardMarkup([
+        [InlineKeyboardButton("📢 ᴜᴘᴅᴀᴛᴇꜱ", url=SUPPORT_CHANNEL), InlineKeyboardButton("👥 ꜱᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT)],
+        [InlineKeyboardButton("👨‍💻 ᴅᴇᴠᴇʟᴏᴘᴇʀ", url=OWNER_LINK)]
+    ])
 
-# 4. Broadcast (Owner Only)
+    await message.reply_text(text=HELP_TEXT, reply_markup=HELP_BUTTONS)
+
+# 3️⃣ NEW GROUP LOG
+@app.on_message(filters.new_chat_members)
+async def welcome_and_log(client, message):
+    for member in message.new_chat_members:
+        if member.id == (await client.get_me()).id:
+            log_txt = (
+                "👥 **#ᴀᴅᴅᴇᴅ_ᴛᴏ_ɴᴇᴡ_ɢʀᴏᴜᴘ**\n"
+                "━━━━━━━━━━━━━━━━━━━━\n"
+                f"**ɢʀᴏᴜᴘ:** {message.chat.title}\n"
+                f"**ɪᴅ:** `{message.chat.id}`\n"
+                f"**ᴀᴅᴅᴇᴅ ʙʏ:** {message.from_user.mention if message.from_user else 'Unknown'}"
+            )
+            await client.send_message(LOG_GROUP, log_txt)
+            await message.reply_text(f"✨ **ɴᴀᴍᴀꜱᴛᴇ!**\nᴍᴀɪɴ ᴀɢᴀʏᴀ {message.chat.title} ᴋᴏ ꜱᴀꜰᴇ ʀᴀᴋʜɴᴇ! 😎")
+
+# 4️⃣ BROADCAST
 @app.on_message(filters.command("broadcast") & filters.user(OWNER_ID))
 async def broadcast_msg(client, message):
     if not message.reply_to_message:
-        return await message.reply_text("❌ Reply to a message!")
-    ex = await message.reply_text("🚀 Sending...")
+        return await message.reply_text("❌ ʀᴇᴘʟʏ ᴛᴏ ᴀ ᴍᴇꜱꜱᴀɢᴇ!")
+    ex = await message.reply_text("🚀 ʙʀᴏᴀᴅᴄᴀꜱᴛɪɴɢ...")
     count = 0
     for chat_id in list(users_db):
         try:
@@ -99,40 +124,32 @@ async def broadcast_msg(client, message):
             count += 1
             await asyncio.sleep(0.3)
         except: pass
-    await ex.edit(f"✅ Sent to {count} users!")
+    await ex.edit(f"✅ **ʙʀᴏᴀᴅᴄᴀꜱᴛ ᴅᴏɴᴇ!**\nSent to {count} users.")
 
-# 5. THE BEAST ABUSE FILTER (No Mercy)
+# 5️⃣ THE BEAST ABUSE FILTER
 @app.on_message(filters.group & filters.text & ~filters.service)
 async def handle_abuse(client, message):
     users_db.add(message.chat.id)
-    
-    # 🔎 Smart Cleaning: Har special char ko hatakar check karega
     raw_text = message.text.lower()
     clean_text = "".join(e for e in raw_text if e.isalnum()) 
 
     if any(word in raw_text or word in clean_text for word in BAD_WORDS):
         try:
             await message.delete()
-                        # 📢 Log Group Report (Fixed Format)
             log_text = (
                 "🚨 **ᴀʙᴜꜱᴇ ᴅᴇᴛᴇᴄᴛᴇᴅ**\n"
                 "━━━━━━━━━━━━━━━━━━━━\n"
                 f"👤 **ᴜꜱᴇʀ:** {message.from_user.mention}\n"
                 f"🆔 **ɪᴅ:** `{message.from_user.id}`\n"
                 f"👥 **ɢʀᴏᴜᴘ:** {message.chat.title}\n"
-                f"💬 **ᴍᴇꜱꜱᴀɢᴇ:** `{message.text}`\n"
-                "━━━━━━━━━━━━━━━━━━━━"
+                f"💬 **ᴍꜱɢ:** `{message.text}`"
             )
             await client.send_message(LOG_GROUP, log_text)
-
-            # Log to Owner
-            log = f"🚨 **Abuse Log!**\nUser: {message.from_user.mention}\nGroup: {message.chat.title}\nMsg: `{message.text}`"
-            await client.send_message(OWNER_ID, log)
             
-            warn = await message.reply_text(f"⚠️ {message.from_user.mention}, No Abuse! Deleted.")
-            await asyncio.sleep(5)
+            warn = await message.reply_text(f"⚠️ {message.from_user.mention}, **ɴᴏ ᴀʙᴜꜱᴇ!** ᴍꜱɢ ᴅᴇʟᴇᴛᴇᴅ.")
+            await asyncio.sleep(4)
             await warn.delete()
         except: pass
 
-print("🔥 Xeno Beast is Active!")
+print("🔥 Xeno Beast is Active with Stylish Menus!")
 app.run()
