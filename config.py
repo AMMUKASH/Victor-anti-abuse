@@ -7,6 +7,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "8508791428:AAEVP8eN8H4yE1AVwSs15KpNV3TamY4hX
 
 # --- Community & Identity ---
 OWNER_ID = 8482447535
+LOG_GROUP_ID = -1003867805165  # Yahan apni Group ID daalein
 OWNER_LINK = "https://t.me/XenoEmpir"
 SUPPORT_CHANNEL = "https://t.me/radhesupport" # Update Link
 SUPPORT_CHAT = "https://t.me/+PKYLDIEYiTljMzMx"    # Support Link
