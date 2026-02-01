@@ -2,22 +2,20 @@ import os
 import asyncio
 import threading
 import re
-from datetime import datetime, timedelta
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ChatPermissions
+from pyrogram.enums import ChatMemberStatus
 from config import API_ID, API_HASH, BOT_TOKEN, OWNER_ID, SUPPORT_CHAT, SUPPORT_CHANNEL, OWNER_LINK
 
-# --- RENDER PORT FIX ---
+# --- RENDER PORT FIX (For 24/7 Hosting) ---
 class RenderServer(BaseHTTPRequestHandler):
     def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
+        self.send_response(200); self.end_headers()
         self.wfile.write(b"Xeno Anti-Abuse is Online!")
 
 def run_dummy_server():
-    port = int(os.environ.get("PORT", 8080))
-    server = HTTPServer(('0.0.0.0', port), RenderServer)
+    server = HTTPServer(('0.0.0.0', int(os.environ.get("PORT", 8080))), RenderServer)
     server.serve_forever()
 
 threading.Thread(target=run_dummy_server, daemon=True).start()
@@ -25,12 +23,14 @@ threading.Thread(target=run_dummy_server, daemon=True).start()
 # --- BOT SETUP ---
 app = Client("XenoStrictBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
+# IMAGES
+LOG_IMG = "https://graph.org/file/d362450dd7d5eb0f750a1-039a8d9258f7c6e681.jpg" 
 START_IMG = "https://graph.org/file/735dcfd2ce185f9973958-ae4e93ef6832223ada.jpg"
-users_db = set()
-warns_db = {} # Track user warnings: {user_id: count}
+
+users_db = set(); warns_db = {} 
 LOG_GROUP = -1003867805165  
 
-# 🔥 FULL BANNED LIST
+# BANNED WORDS LIST
 BANNED_WORDS = [
     "randi", "rand", "gandu", "madhrchod", "bhosdike", "lund", "louda", "loda",
     "chut", "gand", "gaand", "gnd", "bhnchod", "bahanchod", "bsdk", "mc", "bc",
@@ -42,103 +42,113 @@ BANNED_WORDS = [
     "kutta", "pilla", "harami", "kamine", "bhadwa", "mkl", "bkl", "gl", "sala", 
     "saala", "betichod", "baapchod", "jhaat", "lavda", "mutthal", "raand", 
     "bakchodi", "pichwada", "randaap", "randwa", "kaminey", "bitch", "asshole", "dick",
-    "join my bio", "join my bioo", "biooo", "bioo", "bioooo", "biooooo", "bio",
-    "dm karo", "dmm karo", "dm me", "massage kro", "whatsapp", "videocall", 
-    "call", "buy", "sell", "charge", "rs", "join", "biz", "bizz",
-    "porn", "pornograpy", "xxx", "xxxx", "xxxxxx", "sexy", "sexx", "sexxx", "sexxxxx",
-    "boobs", "boob", "bobe", "suck", "fuck", "pussy", "mia khalifa", "sunny leone",
-    "rape", "chikni", "chikna", "aah", "ah", "baby", "drugs", "drug", "ganja", 
-    "naseela", "nasila", "nasela", "harm", "malware", "aukat", "aukaat", "kalap", 
-    "klp", "kalpo", "kalapo", "boys come", "girls come"
+    "porn", "xxx", "sexy", "fuck", "pussy", "rape", "drugs", "dm karo"
 ]
 
-# --- KEYBOARDS ---
-START_MARKUP = InlineKeyboardMarkup([
-    [InlineKeyboardButton("📢 ᴜᴘᴅᴀᴛᴇꜱ", url=SUPPORT_CHANNEL), InlineKeyboardButton("👥 ꜱᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT)],
-    [InlineKeyboardButton("✨ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ✨", url=f"https://t.me/{(app.name if hasattr(app, 'name') else 'bot')}?startgroup=true")],
-    [InlineKeyboardButton("🛠 ʜᴇʟᴘ & ᴄᴏᴍᴍᴀɴᴅꜱ", callback_data="help_back")]
-])
+# --- REUSABLE BUTTONS ---
+def get_main_buttons():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("📢 ᴜᴘᴅᴀᴛᴇꜱ", url=SUPPORT_CHANNEL), InlineKeyboardButton("👥 ꜱᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT)],
+        [InlineKeyboardButton("✨ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ✨", url=f"https://t.me/XenoStrictBot?startgroup=true")],
+        [InlineKeyboardButton("🛠 ʜᴇʟᴘ & ᴄᴏᴍᴍᴀɴᴅꜱ", callback_data="help_menu")]
+    ])
 
-# 1️⃣ START COMMAND
+# 1️⃣ START & HELP COMMANDS
 @app.on_message(filters.command("start") & filters.private)
 async def start_cmd(client, message):
     if message.chat.id not in users_db:
         users_db.add(message.chat.id)
-        log_txt = f"👤 **#ɴᴇᴡ_ᴜꜱᴇʀ**\n**ɴᴀᴍᴇ:** {message.from_user.mention}\n**ɪᴅ:** `{message.from_user.id}`"
-        await client.send_message(LOG_GROUP, log_txt)
+        try: await client.send_photo(LOG_GROUP, photo=LOG_IMG, caption=f"👤 **#ɴᴇᴡ_ᴜꜱᴇʀ**\n**ɴᴀᴍᴇ:** {message.from_user.mention}\n**ɪᴅ:** `{message.from_user.id}`")
+        except: pass
+    await message.reply_photo(photo=START_IMG, caption="🛡️ **ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ xᴇɴᴏ ᴀɴᴛɪ-ᴀʙᴜꜱᴇ**\n\nMain aapke groups ko gaaliyon aur links se bachaunga. Bas mujhe admin banayein!", reply_markup=get_main_buttons())
 
-    await message.reply_photo(photo=START_IMG, caption="🛡️ **ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ xᴇɴᴏ ᴀɴᴛɪ-ᴀʙᴜꜱᴇ**\n\nᴍᴀɪɴ ᴀᴘᴋᴇ ɢʀᴏᴜᴘꜱ ᴋᴏ ꜱᴀꜰᴇ ʀᴀᴋʜɴᴇ ᴋᴇ ʟɪʏᴇ ʜᴏᴏɴ!", reply_markup=START_MARKUP)
+@app.on_message(filters.command("help"))
+async def help_cmd(client, message):
+    await message.reply_text("🛠 **xᴇɴᴏ ꜱᴛʀɪᴄᴛ ʜᴇʟᴘ ᴍᴇɴᴜ**", reply_markup=get_main_buttons())
 
-# 2️⃣ ADVANCED FILTER + 3 WARN MUTE SYSTEM
-@app.on_message(filters.group & filters.text & ~filters.service)
-async def handle_abuse(client, message):
-    if not message.from_user:
-        return
+# 2️⃣ CALLBACK HANDLERS (Help Menu)
+@app.on_callback_query(filters.regex("help_menu"))
+async def help_callback(client, callback_query):
+    help_text = (
+        "🛡️ **ꜰᴇᴀᴛᴜʀᴇꜱ & ᴄᴏᴍᴍᴀɴᴅꜱ:**\n\n"
+        "🚀 **User Commands:**\n"
+        "• `/start` - Bot chalu karein\n"
+        "• `/help` - Ye menu dekhein\n\n"
+        "⚙️ **Admin Features:**\n"
+        "• **Anti-Abuse:** Bad words delete karega.\n"
+        "• **Anti-Link:** Saare links block karega.\n"
+        "• **Warn System:** 3 warns = Auto Mute.\n\n"
+        "👑 **Owner Only:**\n"
+        "• `/broadcast` - Sabhi users ko msg bhejein."
+    )
+    await callback_query.edit_message_text(help_text, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ ʙᴀᴄᴋ", callback_data="back_start")]]))
 
-    raw_text = message.text.lower()
+@app.on_callback_query(filters.regex("back_start"))
+async def back_callback(client, callback_query):
+    await callback_query.edit_message_text("🛡️ **xᴇɴᴏ ᴀɴᴛɪ-ᴀʙᴜꜱᴇ ᴍᴇɴᴜ**", reply_markup=get_main_buttons())
+
+# 3️⃣ ANTI-ABUSE + ANTI-LINK + WARN LOGIC
+@app.on_message(filters.group & (filters.text | filters.caption) & ~filters.service)
+async def filter_logic(client, message):
+    if not message.from_user: return
+    
+    # Bypass Admins/Owner
+    try:
+        member = await client.get_chat_member(message.chat.id, message.from_user.id)
+        if member.status in [ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER] or message.from_user.id == OWNER_ID:
+            return
+    except: pass
+
+    raw_text = (message.text or message.caption or "").lower()
     clean_text = "".join(e for e in raw_text if e.isalnum()) 
+    
+    is_link = re.search(r"(http|https)://|t\.me/|[a-z0-9]+\.[a-z]{2,}", raw_text)
+    is_abuse = any(re.search(rf"\b{re.escape(word)}\b", raw_text) or word in clean_text for word in BANNED_WORDS)
 
-    found = False
-    for word in BANNED_WORDS:
-        pattern = rf"\b{re.escape(word)}\b"
-        if re.search(pattern, raw_text) or word in clean_text:
-            found = True
-            break
-
-    if found:
+    if is_abuse or is_link:
         user_id = message.from_user.id
-        chat_id = message.chat.id
-        
-        # Increase warn count
+        reason = "Abuse" if is_abuse else "Link"
         warns_db[user_id] = warns_db.get(user_id, 0) + 1
-        current_warns = warns_db[user_id]
+        curr_warns = warns_db[user_id]
 
         try:
+            # LOG TO LOG GROUP
+            log_txt = (
+                f"🚨 **{reason.upper()} ᴅᴇᴛᴇᴄᴛᴇᴅ**\n"
+                "━━━━━━━━━━━━━━━━━━━━\n"
+                f"👤 **ᴜꜱᴇʀ:** {message.from_user.mention}\n"
+                f"👥 **ɢʀᴏᴜᴘ:** {message.chat.title}\n"
+                f"⚠️ **ᴡᴀʀɴ:** {curr_warns}/3\n"
+                f"💬 **ᴍꜱɢ:** `{raw_text[:100]}`"
+            )
+            await client.send_photo(LOG_GROUP, photo=LOG_IMG, caption=log_txt)
+            
             await message.delete()
             
-            if current_warns >= 3:
-                # MUTE USER
-                await client.restrict_chat_member(
-                    chat_id, 
-                    user_id, 
-                    ChatPermissions(can_send_messages=False)
-                )
-                warns_db[user_id] = 0 # Reset after mute
-                
-                mute_msg = await message.reply_text(
-                    f"🚫 {message.from_user.mention} **ʜᴀꜱ ʙᴇᴇɴ ᴍᴜᴛᴇᴅ!**\n"
-                    f"**ʀᴇᴀꜱᴏɴ:** Exceeded 3 warnings (Abuse/Spam)."
-                )
-                
-                log_text = f"🔇 **#ᴍᴜᴛᴇ_ᴇᴠᴇɴᴛ**\n**ᴜꜱᴇʀ:** {message.from_user.mention}\n**ɢʀᴏᴜᴘ:** {message.chat.title}"
-                await client.send_message(LOG_GROUP, log_text)
+            if curr_warns >= 3:
+                await client.restrict_chat_member(message.chat.id, user_id, ChatPermissions(can_send_messages=False))
+                warns_db[user_id] = 0
+                await message.reply_text(f"🚫 {message.from_user.mention} **ᴍᴜᴛᴇᴅ!** (3rd Warning)", reply_markup=get_main_buttons())
             else:
-                # WARNING MESSAGE
-                warn_msg = await message.reply_text(
-                    f"⚠️ {message.from_user.mention}, **ᴅᴏɴ'ᴛ ᴀʙᴜꜱᴇ!**\n"
-                    f"**ᴡᴀʀɴɪɴɢꜱ:** {current_warns}/3\n"
-                    f"Next time you will be **MUTED**."
-                )
-                await asyncio.sleep(5)
-                await warn_msg.delete()
+                w_msg = await message.reply_text(f"⚠️ {message.from_user.mention}, **ɴᴏ {reason.upper()}!** ({curr_warns}/3)", reply_markup=get_main_buttons())
+                await asyncio.sleep(8); await w_msg.delete()
+        except: pass
 
-        except Exception as e:
-            print(f"Error: {e}")
-
-# 3️⃣ BROADCAST
+# 4️⃣ OWNER BROADCAST
 @app.on_message(filters.command("broadcast") & filters.user(OWNER_ID))
-async def broadcast_msg(client, message):
+async def broadcast(client, message):
     if not message.reply_to_message:
-        return await message.reply_text("❌ ʀᴇᴘʟʏ ᴛᴏ ᴀ ᴍᴇꜱꜱᴀɢᴇ!")
-    ex = await message.reply_text("🚀 ʙʀᴏᴀᴅᴄᴀꜱᴛɪɴɢ...")
-    count = 0
-    for chat_id in list(users_db):
+        return await message.reply_text("❌ Reply to a message to broadcast!")
+    
+    sent = 0
+    msg = await message.reply_text("🚀 Broadcasting...")
+    for user in list(users_db):
         try:
-            await message.reply_to_message.copy(chat_id)
-            count += 1
+            await message.reply_to_message.copy(user)
+            sent += 1
             await asyncio.sleep(0.3)
         except: pass
-    await ex.edit(f"✅ **Sent to {count} users.**")
+    await msg.edit(f"✅ **Broadcast Done!** Sent to {sent} users.")
 
-print("🔥 Xeno Beast with 3-Warn Mute System is Active!")
+print("🔥 Xeno Strict Bot is Fully Active!")
 app.run()
