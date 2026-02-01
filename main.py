@@ -30,9 +30,9 @@ HELP_IMG = "https://graph.org/file/41d3fd1a4182030eb519c-fd35dff2f1f579d076.jpg"
 INFO_IMG = "https://graph.org/file/fcc36307f247bbfc623cd-e736a75b263077982a.jpg"
 
 LOG_GROUP = -1003867805165  
-users_db = set(); warns_db = {}; welcome_enabled = {}
+users_db = set(); warns_db = {}; welcome_enabled = {}; groups_db = set()
 
-# 🔥 MASTER BANNED LIST (Including all your words)
+# 🔥 MASTER BANNED LIST
 BANNED_WORDS = [
     "randi ke bache", "randi ka bacha", "gandu", "maiya rand", "madhrchod", "ma na chudaya",
     "chudata", "chudwa", "chudai", "bhosdike", "lund", "louda", "loda", "chut", "gand",
@@ -62,6 +62,7 @@ def get_main_buttons():
         [InlineKeyboardButton("🛠 ʜᴇʟᴘ & ᴄᴏᴍᴍᴀɴᴅꜱ", callback_data="help_menu")]
     ])
 
+# 1️⃣ START COMMAND
 @app.on_message(filters.command("start") & filters.private)
 async def start_cmd(client, message):
     if message.chat.id not in users_db:
@@ -72,6 +73,21 @@ async def start_cmd(client, message):
         except: pass
     await message.reply_photo(photo=START_IMG, caption="🛡️ **ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ᴀɴᴛᴜ ᴀʙᴜꜱᴇ ʙᴏᴛ**", reply_markup=get_main_buttons())
 
+# 2️⃣ HELP COMMAND (FIXED)
+@app.on_message(filters.command("help"))
+async def help_cmd(client, message):
+    help_text = (
+        "🛡️ **ᴀɴᴛᴜ ᴀʙᴜꜱᴇ ʜᴇʟᴘ ᴍᴇɴᴜ**\n\n"
+        "• **ᴀɴᴛɪ-ʟɪɴᴋ:** Auto deletes links.\n"
+        "• **ᴀɴᴛɪ-ᴀʙᴜꜱᴇ:** Auto deletes slurs.\n"
+        "• **ᴡᴀʀɴɪɴɢꜱ:** 3 warns = Auto Mute.\n"
+        "• **ᴡᴇʟᴄᴏᴍᴇ:** `/welcome on/off`.\n"
+        "• **ɪɴꜰᴏ:** `/info` (Reply to user).\n\n"
+        "💡 *Note: Bot must be Admin with delete permissions.*"
+    )
+    await message.reply_photo(photo=HELP_IMG, caption=help_text, reply_markup=get_main_buttons())
+
+# 3️⃣ INFO COMMAND
 @app.on_message(filters.command("info"))
 async def info_cmd(client, message):
     user = message.from_user if not message.reply_to_message else message.reply_to_message.from_user
@@ -84,6 +100,28 @@ async def info_cmd(client, message):
     )
     await message.reply_photo(photo=INFO_IMG, caption=info_text, reply_markup=get_main_buttons())
 
+# 4️⃣ STATS COMMAND
+@app.on_message(filters.command("stats") & filters.user(OWNER_ID))
+async def stats_cmd(client, message):
+    await message.reply_text(f"📊 **ʙᴏᴛ ꜱᴛᴀᴛɪꜱᴛɪᴄꜱ**\n━━━━━━━━━━━━━\n👤 **ᴜꜱᴇʀꜱ:** {len(users_db)}\n👥 **ɢʀᴏᴜᴘꜱ:** {len(groups_db)}")
+
+# 5️⃣ CALLBACK HANDLER
+@app.on_callback_query(filters.regex("help_menu"))
+async def help_callback(client, callback_query):
+    help_text = "🛡️ **ᴀɴᴛᴜ ᴀʙᴜꜱᴇ ꜰᴇᴀᴛᴜʀᴇꜱ:**\n\n• Anti-Link & Anti-Abuse active\n• 3 Warns = Auto-Mute\n• `/welcome on/off` system\n• Admins are Immune."
+    await callback_query.edit_message_media(
+        media=InputMediaPhoto(HELP_IMG, caption=help_text),
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ ʙᴀᴄᴋ", callback_data="back_start")]])
+    )
+
+@app.on_callback_query(filters.regex("back_start"))
+async def back_callback(client, callback_query):
+    await callback_query.edit_message_media(
+        media=InputMediaPhoto(START_IMG, caption="🛡️ **ᴀɴᴛᴜ ᴀʙᴜꜱᴇ ᴍᴇɴᴜ**"),
+        reply_markup=get_main_buttons()
+    )
+
+# 6️⃣ WELCOME TOGGLE
 @app.on_message(filters.command("welcome") & filters.group)
 async def welcome_toggle(client, message):
     try:
@@ -94,56 +132,54 @@ async def welcome_toggle(client, message):
     state = message.command[1].lower() if len(message.command) > 1 else ""
     if state == "on":
         welcome_enabled[message.chat.id] = True
-        await message.reply_text("✅ Welcome Message **ON**!", reply_markup=get_main_buttons())
+        await message.reply_text("✅ Welcome Message **ON**!")
     elif state == "off":
         welcome_enabled[message.chat.id] = False
-        await message.reply_text("❌ Welcome Message **OFF**!", reply_markup=get_main_buttons())
+        await message.reply_text("❌ Welcome Message **OFF**!")
 
 @app.on_message(filters.new_chat_members)
 async def welcome_handler(client, message):
+    groups_db.add(message.chat.id)
     if welcome_enabled.get(message.chat.id, True):
         for member in message.new_chat_members:
-            if member.is_self:
-                await message.reply_text(f"✨ Hi! I am **Antu Abuse Bot**.", reply_markup=get_main_buttons())
-            else:
-                await message.reply_text(f"👋 Namaste {member.mention}! Welcome to **{message.chat.title}**.", reply_markup=get_main_buttons())
+            await message.reply_text(f"👋 Namaste {member.mention}! Welcome to **{message.chat.title}**.", reply_markup=get_main_buttons())
 
-@app.on_message(filters.group & (filters.text | filters.caption) & ~filters.service)
+# 7️⃣ CORE FILTER (High Priority)
+@app.on_message(filters.group & (filters.text | filters.caption) & ~filters.command(["help", "start", "info", "welcome", "stats"]), group=-1)
 async def main_filter(client, message):
     if not message.from_user: return
+    groups_db.add(message.chat.id)
+    
     try:
         member = await client.get_chat_member(message.chat.id, message.from_user.id)
-        if member.status in [ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER] or message.from_user.id == OWNER_ID: return
+        if member.status in [ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER] or message.from_user.id == OWNER_ID:
+            return
     except: pass
 
-    raw_text = (message.text or message.caption or "").lower()
-    # Normalize text (remove special characters to catch g.a.n.d.u etc)
-    clean_text = re.sub(r'[^a-z0-9\s]', '', raw_text)
+    text = (message.text or message.caption or "").lower()
+    clean_text = re.sub(r'[^a-z0-9\s]', '', text)
     
-    is_link = re.search(r"(http|https)://|t\.me/|[a-z0-9]+\.[a-z]{2,}", raw_text)
-    is_abuse = any(word in raw_text or word in clean_text for word in BANNED_WORDS)
+    is_link = re.search(r"(http|https)://|t\.me/|[a-z0-9]+\.[a-z]{2,}", text)
+    is_abuse = any(word in text or word in clean_text for word in BANNED_WORDS)
 
     if is_abuse or is_link:
         user_id = message.from_user.id
         reason = "Abuse" if is_abuse else "Link/Spam"
         warns_db[user_id] = warns_db.get(user_id, 0) + 1
-        curr_warns = warns_db[user_id]
+        w = warns_db[user_id]
         
         try:
             await message.delete()
-            log_txt = (f"🚨 **{reason.upper()}**\n━━━━━━━━━━━━━━━\n"
-                       f"👤 **ᴜꜱᴇʀ:** {message.from_user.mention}\n"
-                       f"👥 **ɢʀᴏᴜᴘ:** {message.chat.title}\n"
-                       f"⚠️ **ᴡᴀʀɴ:** {curr_warns}/3")
+            log_txt = f"🚨 **{reason.upper()}**\n👤 {message.from_user.mention}\n👥 {message.chat.title}\n⚠️ ᴡᴀʀɴ: {w}/3"
             await client.send_photo(LOG_GROUP, photo=LOG_IMG, caption=log_txt)
             
-            if curr_warns >= 3:
+            if w >= 3:
                 await client.restrict_chat_member(message.chat.id, user_id, ChatPermissions(can_send_messages=False))
-                await message.reply_text(f"🚫 {message.from_user.mention} **Muted!** (3/3 Warnings reached)", reply_markup=get_main_buttons())
+                await message.reply_text(f"🚫 {message.from_user.mention} **Muted!** (3/3 reached)", reply_markup=get_main_buttons())
                 warns_db[user_id] = 0
             else:
-                w = await message.reply_text(f"⚠️ {message.from_user.mention}, No {reason}! ({curr_warns}/3)", reply_markup=get_main_buttons())
-                await asyncio.sleep(10); await w.delete()
+                w_msg = await message.reply_text(f"⚠️ {message.from_user.mention}, No {reason}! ({w}/3)", reply_markup=get_main_buttons())
+                await asyncio.sleep(10); await w_msg.delete()
         except: pass
 
 @app.on_message(filters.command("broadcast") & filters.user(OWNER_ID))
@@ -155,7 +191,7 @@ async def owner_broadcast(client, message):
             await message.reply_to_message.copy(user); sent += 1
             await asyncio.sleep(0.3)
         except: pass
-    await message.reply_text(f"✅ Sent to {sent} users.", reply_markup=get_main_buttons())
+    await message.reply_text(f"✅ Broadcast Sent to {sent} users.")
 
-print("🚀 Antu Abuse Bot (FINAL MASTER) is Online!")
+print("🚀 Antu Abuse Bot (Ultimate Fix) is Online!")
 app.run()
