@@ -1,9 +1,11 @@
 import os
 import asyncio
 import threading
+import re
+from datetime import datetime, timedelta
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ChatPermissions
 from config import API_ID, API_HASH, BOT_TOKEN, OWNER_ID, SUPPORT_CHAT, SUPPORT_CHANNEL, OWNER_LINK
 
 # --- RENDER PORT FIX ---
@@ -25,15 +27,29 @@ app = Client("XenoStrictBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TO
 
 START_IMG = "https://graph.org/file/735dcfd2ce185f9973958-ae4e93ef6832223ada.jpg"
 users_db = set()
-LOG_GROUP = -1003867805165  # <--- Sahi ID Check kar lena
+warns_db = {} # Track user warnings: {user_id: count}
+LOG_GROUP = -1003867805165  
 
-# 🔥 ABUSE LIST
-BAD_WORDS = [
-    "mc", "bc", "bsdk", "bhosadike", "chutiya", "lodu", "gandu", "madarchod", "bhenchod", 
-    "randi", "lund", "lauda", "kutta", "pilla", "harami", "kamine", "bhadwa", "mkl", "bkl", 
-    "gl", "sala", "saala", "betichod", "baapchod", "jhaat", "lavda", "mutthal", "raand", 
-    "bakchodi", "pichwada", "gaand", "chut", "chutiye", "randaap", "randwa", "kaminey",
-    "bitch", "fuck", "asshole", "dick", "pussy", "गाली", "साला", "हरामी", "मादरचोद"
+# 🔥 FULL BANNED LIST
+BANNED_WORDS = [
+    "randi", "rand", "gandu", "madhrchod", "bhosdike", "lund", "louda", "loda",
+    "chut", "gand", "gaand", "gnd", "bhnchod", "bahanchod", "bsdk", "mc", "bc",
+    "randibaz", "randibaaz", "motherfucker", "motherchod", "motherchodo", 
+    "chudai", "chud", "chudi", "chudata", "chudwa", "choda", "chodunga", 
+    "chodungi", "chod", "bhosda", "bhosdi", "lowda", "lowde", "loude", "lode",
+    "behen ko chod", "bhn ko chodke", "bahan ko chodke", "teri maa chodunga",
+    "bahan ki chut", "behen ki lowdii", "teri behen ko chodu", "teri amaa ka bhosraa",
+    "kutta", "pilla", "harami", "kamine", "bhadwa", "mkl", "bkl", "gl", "sala", 
+    "saala", "betichod", "baapchod", "jhaat", "lavda", "mutthal", "raand", 
+    "bakchodi", "pichwada", "randaap", "randwa", "kaminey", "bitch", "asshole", "dick",
+    "join my bio", "join my bioo", "biooo", "bioo", "bioooo", "biooooo", "bio",
+    "dm karo", "dmm karo", "dm me", "massage kro", "whatsapp", "videocall", 
+    "call", "buy", "sell", "charge", "rs", "join", "biz", "bizz",
+    "porn", "pornograpy", "xxx", "xxxx", "xxxxxx", "sexy", "sexx", "sexxx", "sexxxxx",
+    "boobs", "boob", "bobe", "suck", "fuck", "pussy", "mia khalifa", "sunny leone",
+    "rape", "chikni", "chikna", "aah", "ah", "baby", "drugs", "drug", "ganja", 
+    "naseela", "nasila", "nasela", "harm", "malware", "aukat", "aukaat", "kalap", 
+    "klp", "kalpo", "kalapo", "boys come", "girls come"
 ]
 
 # --- KEYBOARDS ---
@@ -43,75 +59,73 @@ START_MARKUP = InlineKeyboardMarkup([
     [InlineKeyboardButton("🛠 ʜᴇʟᴘ & ᴄᴏᴍᴍᴀɴᴅꜱ", callback_data="help_back")]
 ])
 
-# 1️⃣ START COMMAND + LOGS
+# 1️⃣ START COMMAND
 @app.on_message(filters.command("start") & filters.private)
 async def start_cmd(client, message):
     if message.chat.id not in users_db:
         users_db.add(message.chat.id)
-        log_txt = (
-            "👤 **#ɴᴇᴡ_ᴜꜱᴇʀ**\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            f"**ɴᴀᴍᴇ:** {message.from_user.mention}\n"
-            f"**ɪᴅ:** `{message.from_user.id}`\n"
-            f"**ᴜꜱᴇʀ:** @{message.from_user.username if message.from_user.username else 'None'}"
-        )
+        log_txt = f"👤 **#ɴᴇᴡ_ᴜꜱᴇʀ**\n**ɴᴀᴍᴇ:** {message.from_user.mention}\n**ɪᴅ:** `{message.from_user.id}`"
         await client.send_message(LOG_GROUP, log_txt)
 
-    VIP_CAPTION = (
-        "🛡️ **ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ xᴇɴᴏ ᴀɴᴛɪ-ᴀʙᴜꜱᴇ**\n"
-        "━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"ʜᴇʟʟᴏ {message.from_user.mention} ✨\n\n"
-        "ᴍᴀɪɴ ᴀᴘᴋᴇ ɢʀᴏᴜᴘꜱ ᴋᴏ ɢᴀʟɪʏᴏɴ ᴀᴜʀ ꜱᴘᴀᴍ ꜱᴇ ʙᴀᴄʜᴀɴᴇ ᴋᴇ ʟɪʏᴇ ʙᴀɴᴀ ʜᴏᴏɴ. "
-        "ᴍᴜᴊʜᴇ ᴀᴅᴍɪɴ ʙᴀɴᴀᴏ ᴀᴜʀ ʙᴇꜰɪᴋᴀʀ ʜᴏ ᴊᴀᴏ! 😎\n\n"
-        "🚀 **ꜰᴇᴀᴛᴜʀᴇꜱ:**\n"
-        "✨ ᴀᴜᴛᴏ ᴀʙᴜꜱᴇ ᴅᴇʟᴇᴛɪᴏɴ\n"
-        "✨ ɪɴꜱᴛᴀɴᴛ ꜱᴘᴀᴍ ᴘʀᴏᴛᴇᴄᴛɪᴏɴ\n"
-        "✨ ᴜʟᴛʀᴀ-ꜰᴀꜱᴛ ꜱᴘᴇᴇᴅ"
-    )
+    await message.reply_photo(photo=START_IMG, caption="🛡️ **ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ xᴇɴᴏ ᴀɴᴛɪ-ᴀʙᴜꜱᴇ**\n\nᴍᴀɪɴ ᴀᴘᴋᴇ ɢʀᴏᴜᴘꜱ ᴋᴏ ꜱᴀꜰᴇ ʀᴀᴋʜɴᴇ ᴋᴇ ʟɪʏᴇ ʜᴏᴏɴ!", reply_markup=START_MARKUP)
 
-    await message.reply_photo(photo=START_IMG, caption=VIP_CAPTION, reply_markup=START_MARKUP)
+# 2️⃣ ADVANCED FILTER + 3 WARN MUTE SYSTEM
+@app.on_message(filters.group & filters.text & ~filters.service)
+async def handle_abuse(client, message):
+    if not message.from_user:
+        return
 
-# 2️⃣ STYLISH HELP MENU
-@app.on_message(filters.command("help"))
-async def help_cmd(client, message):
-    HELP_TEXT = (
-        "🛡️ **『 𝚇𝙴𝙽𝙾 𝚂𝚃𝚁𝙸𝙲𝚃 𝙱𝙾𝚃 𝙷𝙴𝙻𝙿 』**\n"
-        "━━━━━━━━━━━━━━━━━━━━━\n\n"
-        "🚀 **ᴜꜱᴇʀ ᴄᴏᴍᴍᴀɴᴅꜱ:**\n"
-        "• `/start` - ʙᴏᴛ ᴋᴏ ᴊɪɴᴅᴀ ᴋᴀʀᴇɪɴ\n"
-        "• `/help` - ʏᴇ ᴍᴇɴᴜ ᴅᴇᴋʜᴇɪɴ\n\n"
-        "⚙️ **ᴀᴅᴍɪɴ ꜰᴇᴀᴛᴜʀᴇꜱ:**\n"
-        "• `ᴀᴜᴛᴏ-ᴅᴇʟᴇᴛᴇ` - ɢᴀʟɪ ᴅᴇᴛᴇᴄᴛ ʜᴏᴛᴇ ʜɪ ᴍꜱɢ ᴋʜᴀᴛᴀᴍ\n"
-        "• `/ban` - ʀᴇᴘʟʏ ᴋᴀʀᴋᴇ ᴜꜱᴇʀ ᴋᴏ ʙᴀɴ ᴋᴀʀᴇɪɴ\n\n"
-        "👑 **ᴏᴡɴᴇʀ ᴄᴏᴍᴍᴀɴᴅꜱ:**\n"
-        "• `/broadcast` - ꜱᴀᴀʀᴇ ᴜꜱᴇʀꜱ ᴋᴏ ᴍꜱɢ ʙʜᴇᴊᴇɪɴ\n\n"
-        "━━━━━━━━━━━━━━━━━━━━━\n"
-        "💡 **ᴛɪᴘ:** ʙᴏᴛ ᴋᴏ ɢʀᴏᴜᴘ ᴍᴇɪɴ ꜰᴜʟʟ ᴀᴅᴍɪɴ ʀɪɢʜᴛꜱ ᴅᴇɪɴ!"
-    )
-    
-    HELP_BUTTONS = InlineKeyboardMarkup([
-        [InlineKeyboardButton("📢 ᴜᴘᴅᴀᴛᴇꜱ", url=SUPPORT_CHANNEL), InlineKeyboardButton("👥 ꜱᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT)],
-        [InlineKeyboardButton("👨‍💻 ᴅᴇᴠᴇʟᴏᴘᴇʀ", url=OWNER_LINK)]
-    ])
+    raw_text = message.text.lower()
+    clean_text = "".join(e for e in raw_text if e.isalnum()) 
 
-    await message.reply_text(text=HELP_TEXT, reply_markup=HELP_BUTTONS)
+    found = False
+    for word in BANNED_WORDS:
+        pattern = rf"\b{re.escape(word)}\b"
+        if re.search(pattern, raw_text) or word in clean_text:
+            found = True
+            break
 
-# 3️⃣ NEW GROUP LOG
-@app.on_message(filters.new_chat_members)
-async def welcome_and_log(client, message):
-    for member in message.new_chat_members:
-        if member.id == (await client.get_me()).id:
-            log_txt = (
-                "👥 **#ᴀᴅᴅᴇᴅ_ᴛᴏ_ɴᴇᴡ_ɢʀᴏᴜᴘ**\n"
-                "━━━━━━━━━━━━━━━━━━━━\n"
-                f"**ɢʀᴏᴜᴘ:** {message.chat.title}\n"
-                f"**ɪᴅ:** `{message.chat.id}`\n"
-                f"**ᴀᴅᴅᴇᴅ ʙʏ:** {message.from_user.mention if message.from_user else 'Unknown'}"
-            )
-            await client.send_message(LOG_GROUP, log_txt)
-            await message.reply_text(f"✨ **ɴᴀᴍᴀꜱᴛᴇ!**\nᴍᴀɪɴ ᴀɢᴀʏᴀ {message.chat.title} ᴋᴏ ꜱᴀꜰᴇ ʀᴀᴋʜɴᴇ! 😎")
+    if found:
+        user_id = message.from_user.id
+        chat_id = message.chat.id
+        
+        # Increase warn count
+        warns_db[user_id] = warns_db.get(user_id, 0) + 1
+        current_warns = warns_db[user_id]
 
-# 4️⃣ BROADCAST
+        try:
+            await message.delete()
+            
+            if current_warns >= 3:
+                # MUTE USER
+                await client.restrict_chat_member(
+                    chat_id, 
+                    user_id, 
+                    ChatPermissions(can_send_messages=False)
+                )
+                warns_db[user_id] = 0 # Reset after mute
+                
+                mute_msg = await message.reply_text(
+                    f"🚫 {message.from_user.mention} **ʜᴀꜱ ʙᴇᴇɴ ᴍᴜᴛᴇᴅ!**\n"
+                    f"**ʀᴇᴀꜱᴏɴ:** Exceeded 3 warnings (Abuse/Spam)."
+                )
+                
+                log_text = f"🔇 **#ᴍᴜᴛᴇ_ᴇᴠᴇɴᴛ**\n**ᴜꜱᴇʀ:** {message.from_user.mention}\n**ɢʀᴏᴜᴘ:** {message.chat.title}"
+                await client.send_message(LOG_GROUP, log_text)
+            else:
+                # WARNING MESSAGE
+                warn_msg = await message.reply_text(
+                    f"⚠️ {message.from_user.mention}, **ᴅᴏɴ'ᴛ ᴀʙᴜꜱᴇ!**\n"
+                    f"**ᴡᴀʀɴɪɴɢꜱ:** {current_warns}/3\n"
+                    f"Next time you will be **MUTED**."
+                )
+                await asyncio.sleep(5)
+                await warn_msg.delete()
+
+        except Exception as e:
+            print(f"Error: {e}")
+
+# 3️⃣ BROADCAST
 @app.on_message(filters.command("broadcast") & filters.user(OWNER_ID))
 async def broadcast_msg(client, message):
     if not message.reply_to_message:
@@ -124,32 +138,7 @@ async def broadcast_msg(client, message):
             count += 1
             await asyncio.sleep(0.3)
         except: pass
-    await ex.edit(f"✅ **ʙʀᴏᴀᴅᴄᴀꜱᴛ ᴅᴏɴᴇ!**\nSent to {count} users.")
+    await ex.edit(f"✅ **Sent to {count} users.**")
 
-# 5️⃣ THE BEAST ABUSE FILTER
-@app.on_message(filters.group & filters.text & ~filters.service)
-async def handle_abuse(client, message):
-    users_db.add(message.chat.id)
-    raw_text = message.text.lower()
-    clean_text = "".join(e for e in raw_text if e.isalnum()) 
-
-    if any(word in raw_text or word in clean_text for word in BAD_WORDS):
-        try:
-            await message.delete()
-            log_text = (
-                "🚨 **ᴀʙᴜꜱᴇ ᴅᴇᴛᴇᴄᴛᴇᴅ**\n"
-                "━━━━━━━━━━━━━━━━━━━━\n"
-                f"👤 **ᴜꜱᴇʀ:** {message.from_user.mention}\n"
-                f"🆔 **ɪᴅ:** `{message.from_user.id}`\n"
-                f"👥 **ɢʀᴏᴜᴘ:** {message.chat.title}\n"
-                f"💬 **ᴍꜱɢ:** `{message.text}`"
-            )
-            await client.send_message(LOG_GROUP, log_text)
-            
-            warn = await message.reply_text(f"⚠️ {message.from_user.mention}, **ɴᴏ ᴀʙᴜꜱᴇ!** ᴍꜱɢ ᴅᴇʟᴇᴛᴇᴅ.")
-            await asyncio.sleep(4)
-            await warn.delete()
-        except: pass
-
-print("🔥 Xeno Beast is Active with Stylish Menus!")
+print("🔥 Xeno Beast with 3-Warn Mute System is Active!")
 app.run()
