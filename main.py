@@ -66,8 +66,11 @@ def get_main_buttons():
 async def is_admin(client, chat_id, user_id):
     if user_id == OWNER_ID:
         return True
-    member = await client.get_chat_member(chat_id, user_id)
-    return member.status in [ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER]
+    try:
+        member = await client.get_chat_member(chat_id, user_id)
+        return member.status in [ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER]
+    except:
+        return False
 
 # 1️⃣ START COMMAND
 @app.on_message(filters.command("start") & filters.private)
@@ -80,36 +83,108 @@ async def start_cmd(client, message):
         except: pass
     await message.reply_photo(photo=START_IMG, caption="🛡️ **ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ᴀɴᴛᴜ ᴀʙᴜꜱᴇ ʙᴏᴛ**", reply_markup=get_main_buttons())
 
-# 2️⃣ MUTE/UNMUTE COMMANDS
-@app.on_message(filters.command("mute") & filters.group)
-async def mute_user(client, message):
+# 2️⃣ ADMIN COMMANDS (MUTE/UNMUTE/BAN/UNBAN)
+@app.on_message(filters.command(["mute", "ban", "unmute", "unban"]) & filters.group)
+async def admin_actions(client, message):
     if not await is_admin(client, message.chat.id, message.from_user.id):
         return await message.reply_text("❌ Aap admin nahi ho!")
     
     if not message.reply_to_message:
-        return await message.reply_text("❌ User ke message pe reply karke `/mute` likho!")
+        return await message.reply_text(f"❌ User ke message pe reply karke `/{message.command[0]}` likho!")
 
-    user_id = message.reply_to_message.from_user.id
+    user = message.reply_to_message.from_user
+    cmd = message.command[0]
+
     try:
-        await client.restrict_chat_member(message.chat.id, user_id, ChatPermissions(can_send_messages=False))
-        await message.reply_photo(photo=HELP_IMG, caption=f"🚫 {message.reply_to_message.from_user.mention} ko **Mute** kar diya gaya hai!", reply_markup=get_main_buttons())
+        if cmd == "mute":
+            await client.restrict_chat_member(message.chat.id, user.id, ChatPermissions(can_send_messages=False))
+            act = "ᴍᴜᴛᴇᴅ 🚫"
+        elif cmd == "ban":
+            await client.ban_chat_member(message.chat.id, user.id)
+            act = "ʙᴀɴɴᴇᴅ 🚷"
+        elif cmd == "unmute" or cmd == "unban":
+            await client.unban_chat_member(message.chat.id, user.id)
+            act = "ᴜɴᴍᴜᴛᴇᴅ/ᴜɴʙᴀɴɴᴇᴅ ✅"
+            warns_db[user.id] = 0
+
+        # Output Message
+        await message.reply_photo(
+            photo=HELP_IMG, 
+            caption=f"🛠 **ᴀᴅᴍɪɴ ᴀᴄᴛɪᴏɴ**\n━━━━━━━━━━━━━\n👤 **ᴜꜱᴇʀ:** {user.mention}\n⚡ **ᴀᴄᴛɪᴏɴ:** {act}\n👮 **ʙʏ:** {message.from_user.mention}",
+            reply_markup=get_main_buttons()
+        )
+        
+        # Log to Group
+        log_txt = f"🛠 **#ᴀᴅᴍɪɴ_ᴀᴄᴛɪᴏɴ**\n━━━━━━━━━━━━━\n👤 **ᴜꜱᴇʀ:** {user.mention}\n🆔 **ɪᴅ:** `{user.id}`\n👥 **ɢʀᴏᴜᴘ:** {message.chat.title}\n⚡ **ᴀᴄᴛɪᴏɴ:** {act}\n👮 **ᴀᴅᴍɪɴ:** {message.from_user.mention}"
+        await client.send_photo(LOG_GROUP, photo=LOG_IMG, caption=log_txt)
+
     except Exception as e:
         await message.reply_text(f"❌ Error: {e}")
 
-@app.on_message(filters.command("unmute") & filters.group)
-async def unmute_user(client, message):
-    if not await is_admin(client, message.chat.id, message.from_user.id):
-        return await message.reply_text("❌ Aap admin nahi ho!")
+# 3️⃣ CORE FILTER (UPGRADED LOGS)
+@app.on_message(filters.group & (filters.text | filters.caption) & ~filters.command(["help", "start", "info", "welcome", "stats", "mute", "unmute", "ban", "unban"]), group=-1)
+async def main_filter(client, message):
+    if not message.from_user: return
+    groups_db.add(message.chat.id)
     
-    if not message.reply_to_message:
-        return await message.reply_text("❌ User ke message pe reply karke `/unmute` likho!")
+    if await is_admin(client, message.chat.id, message.from_user.id):
+        return
 
-    user_id = message.reply_to_message.from_user.id
-    try:
-        await client.restrict_chat_member(message.chat.id, user_id, ChatPermissions(
-            can_send_messages=True,
-            can_send_media_messages=True,
-            can_send_other_messages=True,
+    text = (message.text or message.caption or "").lower()
+    clean_text = re.sub(r'[^a-z0-9\s]', '', text)
+    
+    is_link = re.search(r"(http|https)://|t\.me/|[a-z0-9]+\.[a-z]{2,}", text)
+    is_abuse = any(word in text or word in clean_text for word in BANNED_WORDS)
+
+    if is_abuse or is_link:
+        user_id = message.from_user.id
+        reason = "ᴀʙᴜꜱᴇ/ɢᴀᴀʟɪ" if is_abuse else "ʟɪɴᴋ/ꜱᴘᴀᴍ"
+        warns_db[user_id] = warns_db.get(user_id, 0) + 1
+        w = warns_db[user_id]
+        bar = "🟥" * w + "⬜" * (3 - w)
+        
+        try:
+            await message.delete()
+            
+            # Log Group Details (Upgraded)
+            log_txt = (
+                f"🚨 **#ᴀᴜᴛᴏ_ᴅᴇʟᴇᴛᴇ**\n━━━━━━━━━━━━━\n"
+                f"👤 **ᴜꜱᴇʀ:** {message.from_user.mention}\n"
+                f"🆔 **ɪᴅ:** `{user_id}`\n"
+                f"👥 **ɢʀᴏᴜᴘ:** {message.chat.title}\n"
+                f"📝 **ʀᴇᴀꜱᴏɴ:** {reason}\n"
+                f"⚠️ **ᴡᴀʀɴꜱ:** {w}/3\n"
+                f"💬 **ᴍᴇꜱꜱᴀɢᴇ:** {text[:100]}"
+            )
+            await client.send_photo(LOG_GROUP, photo=LOG_IMG, caption=log_txt)
+
+            if w >= 3:
+                await client.restrict_chat_member(message.chat.id, user_id, ChatPermissions(can_send_messages=False))
+                mute_caption = (
+                    f"🚫 **ᴜꜱᴇʀ ᴀᴜᴛᴏ-ᴍᴜᴛᴇᴅ**\n━━━━━━━━━━━━━\n"
+                    f"👥 **ɢʀᴏᴜᴘ:** {message.chat.title}\n👤 **ᴜꜱᴇʀ:** {message.from_user.mention}\n"
+                    f"📝 **ʀᴇᴀꜱᴏɴ:** 3/3 Warnings ({reason})"
+                )
+                await message.reply_photo(photo=HELP_IMG, caption=mute_caption, reply_markup=get_main_buttons())
+                warns_db[user_id] = 0
+            else:
+                warn_caption = (
+                    f"🛡️ **ᴀɴᴛɪ-ᴀʙᴜꜱᴇ ꜱʏꜱᴛᴇᴍ**\n━━━━━━━━━━━━━\n"
+                    f"👥 **ɢʀᴏᴜᴘ:** {message.chat.title}\n⚠️ **ʜᴇʏ** {message.from_user.mention},\n"
+                    f"📵 **ɴᴏ {reason} ᴀʟʟᴏᴡᴇᴅ!**\n\n📊 **ᴘʀᴏɢʀᴇꜱꜱ:** {bar} ({w}/3)"
+                )
+                w_msg = await message.reply_photo(photo=HELP_IMG, caption=warn_caption, reply_markup=get_main_buttons())
+                await asyncio.sleep(15); await w_msg.delete()
+        except: pass
+
+# --- OTHER COMMANDS ---
+@app.on_message(filters.command("help"))
+async def help_cmd(client, message):
+    help_text = "🛡️ **ᴀɴᴛᴜ ᴀʙᴜꜱᴇ ʜᴇʟᴘ**\n\n• `/mute` - Mute a user\n• `/unmute` - Unmute user\n• `/ban` - Ban a user\n• `/unban` - Unban user\n• `/info` - User info\n• `/welcome on/off`"
+    await message.reply_photo(photo=HELP_IMG, caption=help_text, reply_markup=get_main_buttons())
+
+print("🚀 Antu Abuse Bot (Ultimate Fix) is Online!")
+app.run()
             can_add_web_page_previews=True
         ))
         warns_db[user_id] = 0 # Warns reset kar dete hain unmute par
