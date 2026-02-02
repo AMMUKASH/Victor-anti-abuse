@@ -29,6 +29,7 @@ START_IMG = "https://graph.org/file/735dcfd2ce185f9973958-ae4e93ef6832223ada.jpg
 HELP_IMG = "https://graph.org/file/41d3fd1a4182030eb519c-fd35dff2f1f579d076.jpg"
 INFO_IMG = "https://graph.org/file/fcc36307f247bbfc623cd-e736a75b263077982a.jpg"
 WARN_IMG = "https://graph.org/file/41d3fd1a4182030eb519c-fd35dff2f1f579d076.jpg"
+WELCOME_IMG = "https://graph.org/file/dd6f52b9da84901f05cea-57225089b205ccf939.jpg"
 
 LOG_GROUP = -1003867805165  
 users_db = set(); warns_db = {}; welcome_enabled = {}; groups_db = set()
@@ -87,7 +88,7 @@ async def start_cmd(client, message):
     start_btn.inline_keyboard.append([InlineKeyboardButton("🛠 ʜᴇʟᴘ & ᴄᴏᴍᴍᴀɴᴅꜱ", callback_data="help_menu")])
     await message.reply_photo(photo=START_IMG, caption=start_text, reply_markup=start_btn)
 
-# 2️⃣ HELP HANDLER (CALLBACK & COMMAND)
+# 2️⃣ HELP HANDLER
 @app.on_message(filters.command("help"))
 async def help_cmd(client, message):
     await help_logic(message)
@@ -101,7 +102,7 @@ async def help_logic(message, edit=False):
         "🛠 **ᴀɴᴛᴜ ᴀʙᴜꜱᴇ ᴄᴏᴍᴍᴀɴᴅꜱ ᴍᴇɴᴜ**\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
         "🔹 **/start** - ᴛᴏ ꜱᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ.\n"
-        "🔹 **/help** - ᴛᴏ ɢᴇᴛ ᴛʜɪꜱ ᴍᴇɴɢ.\n"
+        "🔹 **/help** - ᴛᴏ ɢᴇᴛ ᴛʜɪꜱ ᴍᴇɴᴜ.\n"
         "🔹 **/info** - ɢᴇᴛ ᴜꜱᴇʀ ᴅᴇᴛᴀɪʟꜱ (ʀᴇᴘʟʏ).\n"
         "🔹 **/welcome on/off** - ᴛᴏɢɢʟᴇ ᴡᴇʟᴄᴏᴍᴇ.\n"
         "🔹 **/stats** - ᴄʜᴇᴄᴋ ʙᴏᴛ ᴅᴀᴛᴀ (ᴏᴡɴᴇʀ).\n\n"
@@ -115,7 +116,7 @@ async def help_logic(message, edit=False):
     buttons.inline_keyboard.append([InlineKeyboardButton("⬅️ ʙᴀᴄᴋ", callback_data="back_start")])
     
     if edit:
-        await message.edit_caption(caption=help_text, reply_markup=buttons)
+        await message.edit_message_media(media=InputMediaPhoto(HELP_IMG, caption=help_text), reply_markup=buttons)
     else:
         await message.reply_photo(photo=HELP_IMG, caption=help_text, reply_markup=buttons)
 
@@ -127,7 +128,7 @@ async def back_callback(client, callback_query):
     )
     start_btn = get_main_buttons()
     start_btn.inline_keyboard.append([InlineKeyboardButton("🛠 ʜᴇʟᴘ & ᴄᴏᴍᴍᴀɴᴅꜱ", callback_data="help_menu")])
-    await callback_query.edit_message_caption(caption=start_text, reply_markup=start_btn)
+    await callback_query.edit_message_media(media=InputMediaPhoto(START_IMG, caption=start_text), reply_markup=start_btn)
 
 # 3️⃣ INFO COMMAND
 @app.on_message(filters.command("info"))
@@ -142,7 +143,32 @@ async def info_cmd(client, message):
     )
     await message.reply_photo(photo=INFO_IMG, caption=info_text, reply_markup=get_main_buttons())
 
-# 4️⃣ WELCOME TOGGLE
+# 4️⃣ WELCOME SYSTEM + LOGGING
+@app.on_message(filters.new_chat_members)
+async def welcome_handler(client, message):
+    groups_db.add(message.chat.id)
+    if welcome_enabled.get(message.chat.id, True):
+        for member in message.new_chat_members:
+            welcome_text = (
+                f"✨ **ɴᴇᴡ ᴍᴇᴍʙᴇʀ ᴀʟᴇʀᴛ** ✨\n"
+                f"━━━━━━━━━━━━━━━━━\n"
+                f"👋 **ʜᴇʟʟᴏ** {member.mention}\n"
+                f"👤 **ᴜꜱᴇʀɴᴀᴍᴇ:** @{member.username if member.username else 'None'}\n"
+                f"🆔 **ᴜꜱᴇʀ ɪᴅ:** `{member.id}`\n\n"
+                f"ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ **{message.chat.title}**!\n"
+                f"ʜᴀᴠᴇ ᴀ ɢʀᴇᴀᴛ ᴛɪᴍᴇ ʜᴇʀᴇ.\n"
+                f"━━━━━━━━━━━━━━━━━\n"
+                f"🛡️ **ᴘᴏᴡᴇʀᴇᴅ ʙʏ: ᴀɴᴛᴜ ᴀʙᴜꜱᴇ ʙᴏᴛ**"
+            )
+            welcome_btn = InlineKeyboardMarkup([[InlineKeyboardButton("✨ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ✨", url="https://t.me/AntuAbusebot?startgroup=true")]])
+            try:
+                # Group Message
+                await message.reply_photo(photo=WELCOME_IMG, caption=welcome_text, reply_markup=welcome_btn)
+                # Log to LOG_GROUP
+                log_txt = f"➕ **#ɴᴇᴡ_ᴍᴇᴍʙᴇʀ**\n👥 **ɢʀᴏᴜᴘ:** {message.chat.title}\n👤 **ᴜꜱᴇʀ:** {member.mention}"
+                await client.send_photo(LOG_GROUP, photo=WELCOME_IMG, caption=log_txt)
+            except: pass
+
 @app.on_message(filters.command("welcome") & filters.group)
 async def welcome_toggle(client, message):
     try:
@@ -158,14 +184,7 @@ async def welcome_toggle(client, message):
         welcome_enabled[message.chat.id] = False
         await message.reply_text("❌ **ᴡᴇʟᴄᴏᴍᴇ ᴍᴇꜱꜱᴀɢᴇ ᴛᴜʀɴᴇᴅ ᴏꜰꜰ!**")
 
-@app.on_message(filters.new_chat_members)
-async def welcome_handler(client, message):
-    groups_db.add(message.chat.id)
-    if welcome_enabled.get(message.chat.id, True):
-        for member in message.new_chat_members:
-            await message.reply_text(f"👋 **ɴᴀᴍᴀꜱᴛᴇ {member.mention}!**\nᴡᴇʟᴄᴏᴍᴇ ᴛᴏ **{message.chat.title}**.", reply_markup=get_main_buttons())
-
-# 5️⃣ CORE FILTER (Antu Abuse System)
+# 5️⃣ CORE FILTER + LOGGING (Warn, Abuse, Mute)
 @app.on_message(filters.group & (filters.text | filters.caption) & ~filters.command(["help", "start", "info", "welcome", "stats"]), group=-1)
 async def main_filter(client, message):
     if not message.from_user: return
@@ -179,7 +198,6 @@ async def main_filter(client, message):
 
     text = (message.text or message.caption or "").lower()
     clean_text = re.sub(r'[^a-z0-9\s]', '', text)
-    
     is_link = re.search(r"(http|https)://|t\.me/|[a-z0-9]+\.[a-z]{2,}", text)
     is_abuse = any(word in text or word in clean_text for word in BANNED_WORDS)
 
@@ -189,38 +207,39 @@ async def main_filter(client, message):
         warns_db[user_id] = warns_db.get(user_id, 0) + 1
         w = warns_db[user_id]
         
-        # Stylish Caption for Warning
-        alert_text = (
-            f"🛡️ **ᴀɴᴛɪ-ᴀʙᴜꜱᴇ ꜱʏꜱᴛᴇᴍ ᴀʟᴇʀᴛ**\n"
-            f"━━━━━━━━━━━━━━━━━━━━\n"
-            f"👤 **ᴜꜱᴇʀ:** {message.from_user.mention}\n"
-            f"🆔 **ᴜꜱᴇʀ ɪᴅ:** `{user_id}`\n"
-            f"👥 **ɢʀᴏᴜᴘ:** `{message.chat.title}`\n"
-            f"🚫 **ʀᴇᴀꜱᴏɴ:** {reason_type}\n"
-            f"⚠️ **ᴡᴀʀɴɪɴɢꜱ:** `{w}/3`\n"
-            f"━━━━━━━━━━━━━━━━━━━━\n"
-            f"📝 **ᴀᴄᴛɪᴏɴ:** Message Deleted Automatically!"
-        )
-
         try:
             await message.delete()
             
             if w >= 3:
-                mute_text = (
-                    f"🚫 **ᴜꜱᴇʀ ᴍᴜᴛᴇᴅ ꜱᴜᴄᴄᴇꜱꜱꜰᴜʟʟʏ**\n"
+                mute_caption = (
+                    f"🚫 **#ᴜꜱᴇʀ_ᴍᴜᴛᴇᴅ**\n"
                     f"━━━━━━━━━━━━━━━━━━━━\n"
                     f"👤 **ᴜꜱᴇʀ:** {message.from_user.mention}\n"
                     f"🆔 **ɪᴅ:** `{user_id}`\n"
                     f"👥 **ɢʀᴏᴜᴘ:** `{message.chat.title}`\n"
-                    f"⚠️ **ʀᴇᴀꜱᴏɴ:** ᴇxᴄᴇᴇᴅᴇᴅ ᴍᴀx ᴡᴀʀɴɪɴɢꜱ (3/3)\n"
-                    f"🛠 **ꜱᴛᴀᴛᴜꜱ:** ᴍᴜᴛᴇᴅ ʙʏ ᴀɴᴛᴜ ᴀʙᴜꜱᴇ\n"
+                    f"⚠️ **ʀᴇᴀꜱᴏɴ:** 3/3 Warns Reached\n"
                     f"━━━━━━━━━━━━━━━━━━━━"
                 )
                 await client.restrict_chat_member(message.chat.id, user_id, ChatPermissions(can_send_messages=False))
-                await message.reply_photo(photo=WARN_IMG, caption=mute_text, reply_markup=get_main_buttons())
+                # Group & Log
+                await message.reply_photo(photo=WARN_IMG, caption=mute_caption, reply_markup=get_main_buttons())
+                await client.send_photo(LOG_GROUP, photo=WARN_IMG, caption=mute_caption)
                 warns_db[user_id] = 0
             else:
-                w_msg = await message.reply_photo(photo=WARN_IMG, caption=alert_text, reply_markup=get_main_buttons())
+                warn_caption = (
+                    f"🛡️ **#ᴀʙᴜꜱᴇ_ᴡᴀʀɴɪɴɢ**\n"
+                    f"━━━━━━━━━━━━━━━━━━━━\n"
+                    f"👤 **ᴜꜱᴇʀ:** {message.from_user.mention}\n"
+                    f"👥 **ɢʀᴏᴜᴘ:** `{message.chat.title}`\n"
+                    f"🚫 **ʀᴇᴀꜱᴏɴ:** {reason_type}\n"
+                    f"⚠️ **ᴡᴀʀɴɪɴɢꜱ:** `{w}/3`\n"
+                    f"━━━━━━━━━━━━━━━━━━━━"
+                )
+                # Reply in Group
+                w_msg = await message.reply_photo(photo=WARN_IMG, caption=warn_caption, reply_markup=get_main_buttons())
+                # Log to Log Group
+                await client.send_photo(LOG_GROUP, photo=WARN_IMG, caption=warn_caption)
+                
                 await asyncio.sleep(15) 
                 await w_msg.delete()
         except: pass
@@ -228,7 +247,7 @@ async def main_filter(client, message):
 # 6️⃣ OWNER COMMANDS
 @app.on_message(filters.command("stats") & filters.user(OWNER_ID))
 async def stats_cmd(client, message):
-    await message.reply_text(f"📊 **ʙᴏᴛ ꜱᴛᴀᴛɪꜱᴛɪᴄꜱ**\n━━━━━━━━━━━━━\n👤 **ᴜꜱᴇʀꜱ:** {len(users_db)}\n👥 **ɢʀᴏᴜᴘ|ꜱ:** {len(groups_db)}")
+    await message.reply_text(f"📊 **ʙᴏᴛ ꜱᴛᴀᴛɪꜱᴛɪᴄꜱ**\n━━━━━━━━━━━━━\n👤 **ᴜꜱᴇʀꜱ:** {len(users_db)}\n👥 **ɢʀᴏᴜᴘꜱ:** {len(groups_db)}")
 
 @app.on_message(filters.command("broadcast") & filters.user(OWNER_ID))
 async def owner_broadcast(client, message):
@@ -241,5 +260,4 @@ async def owner_broadcast(client, message):
         except: pass
     await message.reply_text(f"✅ **ʙʀᴏᴀᴅᴄᴀꜱᴛ ꜱᴇɴᴛ ᴛᴏ {sent} ᴜꜱᴇʀꜱ.**")
 
-print("🚀 Antu Abuse Bot (Stylish Edition) is Online!")
 app.run()
