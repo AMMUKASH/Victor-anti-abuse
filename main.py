@@ -73,14 +73,14 @@ async def start_cmd(client, message):
         except: pass
     await message.reply_photo(photo=START_IMG, caption="🛡️ **ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ᴀɴᴛᴜ ᴀʙᴜꜱᴇ ʙᴏᴛ**", reply_markup=get_main_buttons())
 
-# 2️⃣ HELP COMMAND (FIXED)
+# 2️⃣ HELP COMMAND
 @app.on_message(filters.command("help"))
 async def help_cmd(client, message):
     help_text = (
         "🛡️ **ᴀɴᴛᴜ ᴀʙᴜꜱᴇ ʜᴇʟᴘ ᴍᴇɴᴜ**\n\n"
         "• **ᴀɴᴛɪ-ʟɪɴᴋ:** Auto deletes links.\n"
         "• **ᴀɴᴛɪ-ᴀʙᴜꜱᴇ:** Auto deletes slurs.\n"
-        "• **ᴡᴀʀɴɪɴɢꜱ:** 3 warns = Auto Mute.\n"
+        "• **ᴡᴀʀɴɪɴɢ:** 3 warns = Auto Mute.\n"
         "• **ᴡᴇʟᴄᴏᴍᴇ:** `/welcome on/off`.\n"
         "• **ɪɴꜰᴏ:** `/info` (Reply to user).\n\n"
         "💡 *Note: Bot must be Admin with delete permissions.*"
@@ -144,7 +144,7 @@ async def welcome_handler(client, message):
         for member in message.new_chat_members:
             await message.reply_text(f"👋 Namaste {member.mention}! Welcome to **{message.chat.title}**.", reply_markup=get_main_buttons())
 
-# 7️⃣ CORE FILTER (High Priority)
+# 7️⃣ CORE FILTER (FINAL VERSION WITH MUTE IMAGE & ADVANCED CAPTION)
 @app.on_message(filters.group & (filters.text | filters.caption) & ~filters.command(["help", "start", "info", "welcome", "stats"]), group=-1)
 async def main_filter(client, message):
     if not message.from_user: return
@@ -164,23 +164,63 @@ async def main_filter(client, message):
 
     if is_abuse or is_link:
         user_id = message.from_user.id
-        reason = "Abuse" if is_abuse else "Link/Spam"
+        reason = "ᴀʙᴜꜱᴇ/ɢᴀᴀʟɪ" if is_abuse else "ʟɪɴᴋ/ꜱᴘᴀᴍ"
         warns_db[user_id] = warns_db.get(user_id, 0) + 1
         w = warns_db[user_id]
         
+        # Visual Progress Bar
+        bar = "🟥" * w + "⬜" * (3 - w)
+        
         try:
             await message.delete()
-            log_txt = f"🚨 **{reason.upper()}**\n👤 {message.from_user.mention}\n👥 {message.chat.title}\n⚠️ ᴡᴀʀɴ: {w}/3"
+            
+            # Log Group Notification
+            log_txt = f"🚨 **{reason.upper()} ᴅᴇᴛᴇᴄᴛᴇᴅ**\n━━━━━━━━━━━━━\n👤 **ᴜꜱᴇʀ:** {message.from_user.mention}\n👥 **ɢʀᴏᴜᴘ:** {message.chat.title}\n⚠️ **ᴡᴀʀɴ:** {w}/3"
             await client.send_photo(LOG_GROUP, photo=LOG_IMG, caption=log_txt)
             
             if w >= 3:
+                # Mute User Action
                 await client.restrict_chat_member(message.chat.id, user_id, ChatPermissions(can_send_messages=False))
-                await message.reply_text(f"🚫 {message.from_user.mention} **Muted!** (3/3 reached)", reply_markup=get_main_buttons())
+                
+                # FINAL MUTE CAPTION WITH IMAGE
+                mute_caption = (
+                    f"🚫 **ᴜꜱᴇʀ ᴍᴜᴛᴇᴅ ꜱᴜᴄᴄᴇꜱꜱꜰᴜʟʟʏ**\n"
+                    f"━━━━━━━━━━━━━━━━━━━━\n"
+                    f"👥 **ɢʀᴏᴜᴘ:** {message.chat.title}\n"
+                    f"👤 **ᴜꜱᴇʀ:** {message.from_user.mention}\n"
+                    f"🆔 **ɪᴅ:** `{user_id}`\n"
+                    f"📝 **ʀᴇᴀꜱᴏɴ:** ᴇxᴄᴇᴇᴅᴇᴅ 3 ᴡᴀʀɴɪɴɢꜱ ({reason})\n"
+                    f"🛡️ **ꜱᴛᴀᴛᴜꜱ:** ᴍᴜᴛᴇᴅ (3/3 reached)\n"
+                    f"━━━━━━━━━━━━━━━━━━━━\n"
+                    f"💡 *ᴛʜᴇ ᴀᴅᴍɪɴꜱ ʜᴀᴠᴇ ʀᴇꜱᴛʀɪᴄᴛᴇᴅ ʏᴏᴜʀ ᴀʙɪʟɪᴛʏ ᴛᴏ ꜱᴇɴᴅ ᴍᴇꜱꜱᴀɢᴇꜱ.*"
+                )
+                await message.reply_photo(
+                    photo=HELP_IMG, 
+                    caption=mute_caption, 
+                    reply_markup=get_main_buttons()
+                )
                 warns_db[user_id] = 0
             else:
-                w_msg = await message.reply_text(f"⚠️ {message.from_user.mention}, No {reason}! ({w}/3)", reply_markup=get_main_buttons())
-                await asyncio.sleep(10); await w_msg.delete()
-        except: pass
+                # WARNING CAPTION WITH IMAGE
+                warn_caption = (
+                    f"🛡️ **ᴀɴᴛɪ-ᴀʙᴜꜱᴇ ꜱʏꜱᴛᴇᴍ**\n"
+                    f"━━━━━━━━━━━━━━━━━━━━\n"
+                    f"👥 **ɢʀᴏᴜᴘ:** {message.chat.title}\n"
+                    f"⚠️ **ʜᴇʏ** {message.from_user.mention},\n"
+                    f"📵 **ɴᴏ {reason} ᴀʟʟᴏᴡᴇᴅ ʜᴇʀᴇ!**\n\n"
+                    f"📊 **ᴘʀᴏɢʀᴇꜱꜱ:** {bar} ({w}/3)\n"
+                    f"‼️ *ᴘʟᴇᴀꜱᴇ ꜰᴏʟʟᴏᴡ ᴛʜᴇ ʀᴜʟᴇꜱ ᴏʀ ʏᴏᴜ ᴡɪʟʟ ʙᴇ ᴍᴜᴛᴇᴅ.*"
+                )
+                w_msg = await message.reply_photo(
+                    photo=HELP_IMG, 
+                    caption=warn_caption, 
+                    reply_markup=get_main_buttons()
+                )
+                # Auto delete warning to keep chat clean
+                await asyncio.sleep(15)
+                await w_msg.delete()
+        except Exception as e:
+            print(f"Error: {e}")
 
 @app.on_message(filters.command("broadcast") & filters.user(OWNER_ID))
 async def owner_broadcast(client, message):
