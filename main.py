@@ -27,12 +27,11 @@ app = Client("AntuAbuseBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOK
 LOG_IMG = "https://graph.org/file/fcc36307f247bbfc623cd-e736a75b263077982a.jpg" 
 START_IMG = "https://graph.org/file/735dcfd2ce185f9973958-ae4e93ef6832223ada.jpg"
 HELP_IMG = "https://graph.org/file/41d3fd1a4182030eb519c-fd35dff2f1f579d076.jpg"
-INFO_IMG = "https://graph.org/file/fcc36307f247bbfc623cd-e736a75b263077982a.jpg"
 
 LOG_GROUP = -1003867805165  
-users_db = set(); warns_db = {}; welcome_enabled = {}; groups_db = set()
+users_db = set(); warns_db = {}; groups_db = set()
 
-# 🔥 MASTER BANNED LIST
+# 🔥 FULL MASTER BANNED LIST
 BANNED_WORDS = [
     "randi ke bache", "randi ka bacha", "gandu", "maiya rand", "madhrchod", "ma na chudaya",
     "chudata", "chudwa", "chudai", "bhosdike", "lund", "louda", "loda", "chut", "gand",
@@ -62,93 +61,107 @@ def get_main_buttons():
         [InlineKeyboardButton("🛠 ʜᴇʟᴘ & ᴄᴏᴍᴍᴀɴᴅꜱ", callback_data="help_menu")]
     ])
 
-# 1️⃣ START COMMAND
+# 1️⃣ START COMMAND + LOG
 @app.on_message(filters.command("start") & filters.private)
 async def start_cmd(client, message):
     if message.chat.id not in users_db:
         users_db.add(message.chat.id)
-        try:
-            log_txt = f"👤 **#ɴᴇᴡ_ᴜꜱᴇʀ**\n━━━━━━━━━━━━━\n**ɴᴀᴍᴇ:** {message.from_user.mention}\n**ɪᴅ:** `{message.from_user.id}`"
-            await client.send_photo(LOG_GROUP, photo=LOG_IMG, caption=log_txt)
-        except: pass
-    await message.reply_photo(photo=START_IMG, caption="🛡️ **ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ᴀɴᴛᴜ ᴀʙᴜꜱᴇ ʙᴏᴛ**", reply_markup=get_main_buttons())
+        log_txt = (
+            f"👤 **#ɴᴇᴡ_ᴜꜱᴇʀ_ꜱᴛᴀʀᴛᴇᴅ**\n"
+            f"━━━━━━━━━━━━━━━\n"
+            f"**ɴᴀᴍᴇ:** {message.from_user.mention}\n"
+            f"**ɪᴅ:** `{message.from_user.id}`\n"
+            f"**ᴜꜱᴇʀɴᴀᴍᴇ:** @{message.from_user.username}\n"
+            f"━━━━━━━━━━━━━━━"
+        )
+        await client.send_photo(LOG_GROUP, photo=LOG_IMG, caption=log_txt)
+    
+    start_caption = (
+        f"👋 **ʜᴇʟʟᴏ {message.from_user.mention}!**\n\n"
+        f"ɪ ᴀᴍ **ᴀɴᴛᴜ ᴀʙᴜꜱᴇ ʙᴏᴛ**, ʏᴏᴜʀ ᴘᴇʀꜱᴏɴᴀʟ ɢʀᴏᴜᴘ ᴘʀᴏᴛᴇᴄᴛᴏʀ.\n\n"
+        f"🛡️ **ɪ ᴄᴀɴ:**\n"
+        f"• ᴅᴇʟᴇᴛᴇ ᴀʙᴜꜱɪᴠᴇ ᴡᴏʀᴅꜱ\n"
+        f"• ʀᴇᴍᴏᴠᴇ ꜱᴘᴀᴍ ʟɪɴᴋꜱ\n"
+        f"• ᴍᴜᴛᴇ ʀᴇᴘᴇᴀᴛᴇᴅ ᴏꜰꜰᴇɴᴅᴇʀꜱ\n\n"
+        f"**ᴄʟɪᴄᴋ ᴛʜᴇ ʙᴜᴛᴛᴏɴꜱ ʙᴇʟᴏᴡ ꜰᴏʀ ᴍᴏʀᴇ ɪɴꜰᴏ!**"
+    )
+    await message.reply_photo(photo=START_IMG, caption=start_caption, reply_markup=get_main_buttons())
 
-# 2️⃣ HELP COMMAND
+# 2️⃣ HELP COMMAND (MESSAGE & CALLBACK)
 @app.on_message(filters.command("help"))
 async def help_cmd(client, message):
     help_text = (
-        "🛡️ **ᴀɴᴛᴜ ᴀʙᴜꜱᴇ ʜᴇʟᴘ ᴍᴇɴᴜ**\n\n"
-        "• **ᴀɴᴛɪ-ʟɪɴᴋ:** Auto deletes links.\n"
-        "• **ᴀɴᴛɪ-ᴀʙᴜꜱᴇ:** Auto deletes slurs.\n"
-        "• **ᴡᴀʀɴɪɴɢ:** 3 warns = Auto Mute.\n"
-        "• **ᴡᴇʟᴄᴏᴍᴇ:** `/welcome on/off`.\n"
-        "• **ɪɴꜰᴏ:** `/info` (Reply to user).\n\n"
-        "💡 *Note: Bot must be Admin with delete permissions.*"
+        "🛠 **ᴀɴᴛᴜ ᴀʙᴜꜱᴇ - ʜᴇʟᴘ ᴍᴇɴᴜ**\n\n"
+        "• `/mute` - Mute a user (Reply)\n"
+        "• `/unmute` - Unmute a user (Reply)\n"
+        "• `/ban` - Ban a user (Reply)\n"
+        "• `/unban` - Unban a user (Reply)\n"
+        "• `/info` - Get user details\n\n"
+        "🛡️ **ᴀᴜᴛᴏ ꜱʏꜱᴛᴇᴍ:**\n"
+        "• 3 Warns = Auto Mute.\n"
+        "• slurs/Links = Auto Delete + Warn."
     )
     await message.reply_photo(photo=HELP_IMG, caption=help_text, reply_markup=get_main_buttons())
 
-# 3️⃣ INFO COMMAND
-@app.on_message(filters.command("info"))
-async def info_cmd(client, message):
-    user = message.from_user if not message.reply_to_message else message.reply_to_message.from_user
-    status = "ᴏᴡɴᴇʀ 👑" if user.id == OWNER_ID else "ᴜꜱᴇʀ 👤"
-    info_text = (
-        f"🌟 **ᴜꜱᴇʀ ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ** 🌟\n━━━━━━━━━━━━━━━━━━━\n"
-        f"📝 **ɴᴀᴍᴇ:** {user.mention}\n🆔 **ɪᴅ:** `{user.id}`\n"
-        f"👤 **ᴜꜱᴇʀɴᴀᴍᴇ:** @{user.username if user.username else 'None'}\n"
-        f"🛡️ **ꜱᴛᴀᴛᴜꜱ:** {status}\n━━━━━━━━━━━━━━━━━━━"
-    )
-    await message.reply_photo(photo=INFO_IMG, caption=info_text, reply_markup=get_main_buttons())
-
-# 4️⃣ STATS COMMAND
-@app.on_message(filters.command("stats") & filters.user(OWNER_ID))
-async def stats_cmd(client, message):
-    await message.reply_text(f"📊 **ʙᴏᴛ ꜱᴛᴀᴛɪꜱᴛɪᴄꜱ**\n━━━━━━━━━━━━━\n👤 **ᴜꜱᴇʀꜱ:** {len(users_db)}\n👥 **ɢʀᴏᴜᴘꜱ:** {len(groups_db)}")
-
-# 5️⃣ CALLBACK HANDLER
 @app.on_callback_query(filters.regex("help_menu"))
 async def help_callback(client, callback_query):
-    help_text = "🛡️ **ᴀɴᴛᴜ ᴀʙᴜꜱᴇ ꜰᴇᴀᴛᴜʀᴇꜱ:**\n\n• Anti-Link & Anti-Abuse active\n• 3 Warns = Auto-Mute\n• `/welcome on/off` system\n• Admins are Immune."
-    await callback_query.edit_message_media(
-        media=InputMediaPhoto(HELP_IMG, caption=help_text),
+    help_text = (
+        "🛠 **ᴀɴᴛᴜ ᴀʙᴜꜱᴇ - ʜᴇʟᴘ ᴍᴇɴᴜ**\n\n"
+        "• `/mute` - Mute a user\n"
+        "• `/unmute` - Unmute a user\n"
+        "• `/info` - User details\n\n"
+        "🛡️ **ꜱʏꜱᴛᴇᴍ:**\n"
+        "Bot automatically deletes bad words and links. If a user gets 3 warnings, I will mute them automatically."
+    )
+    await callback_query.edit_message_caption(
+        caption=help_text,
         reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ ʙᴀᴄᴋ", callback_data="back_start")]])
     )
 
 @app.on_callback_query(filters.regex("back_start"))
 async def back_callback(client, callback_query):
-    await callback_query.edit_message_media(
-        media=InputMediaPhoto(START_IMG, caption="🛡️ **ᴀɴᴛᴜ ᴀʙᴜꜱᴇ ᴍᴇɴᴜ**"),
-        reply_markup=get_main_buttons()
+    start_caption = f"👋 **ʜᴇʟʟᴏ!**\n\nɪ ᴀᴍ **ᴀɴᴛᴜ ᴀʙᴜꜱᴇ ʙᴏᴛ**. ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴛᴏ ᴋᴇᴇᴘ ɪᴛ ᴄʟᴇᴀɴ ᴀɴᴅ ꜱᴀꜰᴇ!"
+    await callback_query.edit_message_caption(caption=start_caption, reply_markup=get_main_buttons())
+
+# 3️⃣ INFO COMMAND
+@app.on_message(filters.command("info"))
+async def info_cmd(client, message):
+    user = message.reply_to_message.from_user if message.reply_to_message else message.from_user
+    info_cap = (
+        f"👤 **ᴜꜱᴇʀ ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ**\n"
+        f"━━━━━━━━━━━━━━━\n"
+        f"**ɴᴀᴍᴇ:** {user.mention}\n"
+        f"**ɪᴅ:** `{user.id}`\n"
+        f"**ᴜꜱᴇʀɴᴀᴍᴇ:** @{user.username if user.username else 'None'}\n"
+        f"**ʟɪɴᴋ:** [ᴘᴇʀᴍᴀʟɪɴᴋ](tg://user?id={user.id})\n"
+        f"━━━━━━━━━━━━━━━"
     )
+    await message.reply_photo(photo=HELP_IMG, caption=info_cap)
 
-# 6️⃣ WELCOME TOGGLE
-@app.on_message(filters.command("welcome") & filters.group)
-async def welcome_toggle(client, message):
-    try:
-        member = await client.get_chat_member(message.chat.id, message.from_user.id)
-        if member.status not in [ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER] and message.from_user.id != OWNER_ID:
-            return await message.reply_text("❌ Admin only!")
-    except: return
-    state = message.command[1].lower() if len(message.command) > 1 else ""
-    if state == "on":
-        welcome_enabled[message.chat.id] = True
-        await message.reply_text("✅ Welcome Message **ON**!")
-    elif state == "off":
-        welcome_enabled[message.chat.id] = False
-        await message.reply_text("❌ Welcome Message **OFF**!")
-
+# 4️⃣ BOT ADDED TO GROUP LOG
 @app.on_message(filters.new_chat_members)
-async def welcome_handler(client, message):
-    groups_db.add(message.chat.id)
-    if welcome_enabled.get(message.chat.id, True):
-        for member in message.new_chat_members:
-            await message.reply_text(f"👋 Namaste {member.mention}! Welcome to **{message.chat.title}**.", reply_markup=get_main_buttons())
+async def bot_added_handler(client, message):
+    if any(m.id == (await client.get_me()).id for m in message.new_chat_members):
+        chat = message.chat
+        groups_db.add(chat.id)
+        try: link = await client.export_chat_invite_link(chat.id)
+        except: link = "No Permission"
 
-# 7️⃣ CORE FILTER (FINAL VERSION WITH MUTE IMAGE & ADVANCED CAPTION)
-@app.on_message(filters.group & (filters.text | filters.caption) & ~filters.command(["help", "start", "info", "welcome", "stats"]), group=-1)
+        log_txt = (
+            f"📥 **#ʙᴏᴛ_ᴀᴅᴅᴇᴅ_ᴛᴏ_ɢᴄ**\n"
+            f"━━━━━━━━━━━━━━━\n"
+            f"**ᴛɪᴛʟᴇ:** {chat.title}\n"
+            f"**ɪᴅ:** `{chat.id}`\n"
+            f"**ʟɪɴᴋ:** {link}\n"
+            f"**ᴀᴅᴅᴇᴅ ʙʏ:** {message.from_user.mention}\n"
+            f"━━━━━━━━━━━━━━━"
+        )
+        await client.send_photo(LOG_GROUP, photo=LOG_IMG, caption=log_txt)
+
+# 5️⃣ CORE FILTER (SLURS + LINKS) & LOGS
+@app.on_message(filters.group & (filters.text | filters.caption) & ~filters.command(["help", "start", "info", "welcome", "stats", "mute", "unmute"]), group=-1)
 async def main_filter(client, message):
     if not message.from_user: return
-    groups_db.add(message.chat.id)
     
     try:
         member = await client.get_chat_member(message.chat.id, message.from_user.id)
@@ -158,128 +171,42 @@ async def main_filter(client, message):
 
     text = (message.text or message.caption or "").lower()
     clean_text = re.sub(r'[^a-z0-9\s]', '', text)
-    
     is_link = re.search(r"(http|https)://|t\.me/|[a-z0-9]+\.[a-z]{2,}", text)
     is_abuse = any(word in text or word in clean_text for word in BANNED_WORDS)
 
     if is_abuse or is_link:
-        user_id = message.from_user.id
+        user = message.from_user
+        chat = message.chat
         reason = "ᴀʙᴜꜱᴇ/ɢᴀᴀʟɪ" if is_abuse else "ʟɪɴᴋ/ꜱᴘᴀᴍ"
-        warns_db[user_id] = warns_db.get(user_id, 0) + 1
-        w = warns_db[user_id]
+        warns_db[user.id] = warns_db.get(user.id, 0) + 1
+        w = warns_db[user.id]
         
-        # Visual Progress Bar
-        bar = "🟥" * w + "⬜" * (3 - w)
-        
-        try:
-            await message.delete()
-            
-            # Log Group Notification
-            log_txt = f"🚨 **{reason.upper()} ᴅᴇᴛᴇᴄᴛᴇᴅ**\n━━━━━━━━━━━━━\n👤 **ᴜꜱᴇʀ:** {message.from_user.mention}\n👥 **ɢʀᴏᴜᴘ:** {message.chat.title}\n⚠️ **ᴡᴀʀɴ:** {w}/3"
-            await client.send_photo(LOG_GROUP, photo=LOG_IMG, caption=log_txt)
-            
-            if w >= 3:
-                # Mute User Action
-                await client.restrict_chat_member(message.chat.id, user_id, ChatPermissions(can_send_messages=False))
-                
-                # FINAL MUTE CAPTION WITH IMAGE
-                mute_caption = (
-                    f"🚫 **ᴜꜱᴇʀ ᴍᴜᴛᴇᴅ ꜱᴜᴄᴄᴇꜱꜱꜰᴜʟʟʏ**\n"
-                    f"━━━━━━━━━━━━━━━━━━━━\n"
-                    f"👥 **ɢʀᴏᴜᴘ:** {message.chat.title}\n"
-                    f"👤 **ᴜꜱᴇʀ:** {message.from_user.mention}\n"
-                    f"🆔 **ɪᴅ:** `{user_id}`\n"
-                    f"📝 **ʀᴇᴀꜱᴏɴ:** ᴇxᴄᴇᴇᴅᴇᴅ 3 ᴡᴀʀɴɪɴɢꜱ ({reason})\n"
-                    f"🛡️ **ꜱᴛᴀᴛᴜꜱ:** ᴍᴜᴛᴇᴅ (3/3 reached)\n"
-                    f"━━━━━━━━━━━━━━━━━━━━\n"
-                    f"💡 *ᴛʜᴇ ᴀᴅᴍɪɴꜱ ʜᴀᴠᴇ ʀᴇꜱᴛʀɪᴄᴛᴇᴅ ʏᴏᴜʀ ᴀʙɪʟɪᴛʏ ᴛᴏ ꜱᴇɴᴅ ᴍᴇꜱꜱᴀɢᴇꜱ.*"
-                )
-                await message.reply_photo(
-                    photo=HELP_IMG, 
-                    caption=mute_caption, 
-                    reply_markup=get_main_buttons()
-                )
-                warns_db[user_id] = 0
-            else:
-                # WARNING CAPTION WITH IMAGE
-                warn_caption = (
-                    f"🛡️ **ᴀɴᴛɪ-ᴀʙᴜꜱᴇ ꜱʏꜱᴛᴇᴍ**\n"
-                    f"━━━━━━━━━━━━━━━━━━━━\n"
-                    f"👥 **ɢʀᴏᴜᴘ:** {message.chat.title}\n"
-                    f"⚠️ **ʜᴇʏ** {message.from_user.mention},\n"
-                    f"📵 **ɴᴏ {reason} ᴀʟʟᴏᴡᴇᴅ ʜᴇʀᴇ!**\n\n"
-                    f"📊 **ᴘʀᴏɢʀᴇꜱꜱ:** {bar} ({w}/3)\n"
-                    f"‼️ *ᴘʟᴇᴀꜱᴇ ꜰᴏʟʟᴏᴡ ᴛʜᴇ ʀᴜʟᴇꜱ ᴏʀ ʏᴏᴜ ᴡɪʟʟ ʙᴇ ᴍᴜᴛᴇᴅ.*"
-                )
-                w_msg = await message.reply_photo(
-                    photo=HELP_IMG, 
-                    caption=warn_caption, 
-                    reply_markup=get_main_buttons()
-                )
-                # Auto delete warning to keep chat clean
-                await asyncio.sleep(15)
-                await w_msg.delete()
-        except Exception as e:
-            print(f"Error: {e}")
+        await message.delete()
 
-@app.on_message(filters.command("broadcast") & filters.user(OWNER_ID))
-async def owner_broadcast(client, message):
-    if not message.reply_to_message: return
-    sent = 0
-    for user in list(users_db):
-        try:
-            await message.reply_to_message.copy(user); sent += 1
-            await asyncio.sleep(0.3)
-        except: pass
-    await message.reply_text(f"✅ Broadcast Sent to {sent} users.")
-
-print("🚀 Antu Abuse Bot (Ultimate Fix) is Online!")
-app.run()
-            ))
-            act = "ʀᴇʟᴇᴀꜱᴇᴅ ✅"
+        if w >= 3:
+            await client.restrict_chat_member(chat.id, user.id, ChatPermissions(can_send_messages=False))
+            log_tag = "#ᴜꜱᴇʀ_ᴍᴜᴛᴇᴅ"
             warns_db[user.id] = 0
+            rep_text = f"🚫 {user.mention} has been **Muted**! (Reason: 3/3 Warns for {reason})"
+        else:
+            log_tag = "#ᴜꜱᴇʀ_ᴡᴀʀɴᴇᴅ"
+            rep_text = f"⚠️ {user.mention}, don't use **{reason}**! [{w}/3]"
 
-        await message.reply_photo(
-            photo=HELP_IMG, 
-            caption=f"🛠 **ᴀᴅᴍɪɴ ᴀᴄᴛɪᴏɴ**\n━━━━━━━━━━━━━\n👥 **ɢʀᴏᴜᴘ:** {message.chat.title}\n👤 **ᴜꜱᴇʀ:** {user.mention}\n⚡ **ᴀᴄᴛɪᴏɴ:** {act}\n👮 **ᴀᴅᴍɪɴ:** {message.from_user.mention}",
-            reply_markup=get_main_buttons()
+        log_txt = (
+            f"🚨 **{log_tag}**\n"
+            f"━━━━━━━━━━━━━━━\n"
+            f"**👤 ᴜꜱᴇʀ:** {user.mention}\n"
+            f"**🆔 ɪᴅ:** `{user.id}`\n"
+            f"**👥 ɢʀᴏᴜᴘ:** {chat.title}\n"
+            f"**📝 ʀᴇᴀꜱᴏɴ:** {reason}\n"
+            f"**📊 ꜱᴛᴀᴛᴜꜱ:** {w}/3\n"
+            f"━━━━━━━━━━━━━━━"
         )
-        
-        log_txt = f"🛠 **#ᴀᴅᴍɪɴ_ᴀᴄᴛɪᴏɴ**\n━━━━━━━━━━━━━\n👥 **ɢʀᴏᴜᴘ:** {message.chat.title}\n👤 **ᴜꜱᴇʀ:** {user.mention}\n⚡ **ᴀᴄᴛɪᴏɴ:** {act}"
         await client.send_photo(LOG_GROUP, photo=LOG_IMG, caption=log_txt)
-    except Exception as e:
-        await message.reply_text(f"❌ Error: {e}")
-
-# 3️⃣ CORE FILTER (AUTO-DELETE & LOGS)
-@app.on_message(filters.group & (filters.text | filters.caption), group=-1)
-async def main_filter(client, message):
-    if not message.from_user or await is_admin(client, message.chat.id, message.from_user.id):
-        return
-
-    text = (message.text or message.caption or "").lower()
-    is_link = re.search(r"(http|https)://|t\.me/", text)
-    is_abuse = any(word in text for word in BANNED_WORDS)
-
-    if is_abuse or is_link:
-        user_id = message.from_user.id
-        reason = "ᴀʙᴜꜱᴇ/ɢᴀᴀʟɪ" if is_abuse else "ʟɪɴᴋ/ꜱᴘᴀᴍ"
-        warns_db[user_id] = warns_db.get(user_id, 0) + 1
-        w = warns_db[user_id]
         
-        try:
-            await message.delete()
-            log_txt = f"🚨 **#ᴀᴜᴛᴏ_ᴅᴇʟᴇᴛᴇ**\n━━━━━━━━━━━━━\n👥 **ɢʀᴏᴜᴘ:** {message.chat.title}\n👤 **ᴜꜱᴇʀ:** {message.from_user.mention}\n📝 **ʀᴇᴀꜱᴏɴ:** {reason}\n⚠️ **ᴡᴀʀɴꜱ:** {w}/3"
-            await client.send_photo(LOG_GROUP, photo=LOG_IMG, caption=log_txt)
+        msg = await message.reply_text(rep_text)
+        await asyncio.sleep(10)
+        await msg.delete()
 
-            if w >= 3:
-                await client.restrict_chat_member(message.chat.id, user_id, ChatPermissions(can_send_messages=False))
-                await message.reply_photo(photo=HELP_IMG, caption=f"🚫 **ᴜꜱᴇʀ ᴍᴜᴛᴇᴅ!**\n━━━━━━━━━━━━━\n👥 **ɢʀᴏᴜᴘ:** {message.chat.title}\n👤 **ᴜꜱᴇʀ:** {message.from_user.mention}\n📝 **ʀᴇᴀꜱᴏɴ:** 3/3 Warns exceeded.")
-                warns_db[user_id] = 0
-            else:
-                bar = "🟥" * w + "⬜" * (3 - w)
-                w_msg = await message.reply_photo(photo=HELP_IMG, caption=f"🛡️ **ᴀɴᴛɪ-ᴀʙᴜꜱᴇ**\n━━━━━━━━━━━━━\n👥 **ɢʀᴏᴜᴘ:** {message.chat.title}\n⚠️ **ʜᴇʏ** {message.from_user.mention},\n📵 **ɴᴏ {reason} ᴀʟʟᴏᴡᴇᴅ!**\n\n📊 **ᴘʀᴏɢʀᴇꜱꜱ:** {bar} ({w}/3)")
-                await asyncio.sleep(12); await w_msg.delete()
-        except: pass
-
-print("🚀 Antu Abuse Bot (Full & Final) is Online!")
+print("🚀 Antu Abuse Bot (Full Menu & Logs) is Online!")
 app.run()
