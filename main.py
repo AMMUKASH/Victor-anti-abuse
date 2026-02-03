@@ -56,7 +56,7 @@ def get_main_buttons():
         [InlineKeyboardButton("✨ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ✨", url="https://t.me/AntuAbusebot?startgroup=true")]
     ])
 
-# 1️⃣ START COMMAND (Ab Group me bhi chalega ✅)
+# 1️⃣ START COMMAND (Logging Fix Integrated)
 @app.on_message(filters.command("start"))
 async def start_cmd(client, message):
     if message.chat.type == ChatType.PRIVATE:
@@ -67,15 +67,26 @@ async def start_cmd(client, message):
                 await client.send_photo(LOG_GROUP, photo=LOG_IMG, caption=log_txt)
             except: pass
     else:
-        # Jab group me start karein
-        groups_db.add(message.chat.id)
+        # 👥 Group Start Logging
+        if message.chat.id not in groups_db:
+            groups_db.add(message.chat.id)
+            try:
+                group_log = (
+                    f"👥 **#ɴᴇᴡ_ɢʀᴏᴜᴘ_ᴀᴅᴅᴇᴅ**\n"
+                    f"━━━━━━━━━━━━━\n"
+                    f"**ɢʀᴏᴜᴘ:** `{message.chat.title}`\n"
+                    f"**ɪᴅ:** `{message.chat.id}`\n"
+                    f"**ᴀᴅᴅᴇᴅ ʙʏ:** {message.from_user.mention if message.from_user else 'Unknown'}"
+                )
+                await client.send_photo(LOG_GROUP, photo=LOG_IMG, caption=group_log)
+            except: pass
     
     start_text = (
         f"👋 **ʜᴇʟʟᴏ {message.from_user.mention},**\n\n"
         "ɪ ᴀᴍ **ᴀɴᴛᴜ ᴀʙᴜꜱᴇ ʙᴏᴛ**.\n\n"
         "✨ **ᴍᴀɪɴ ꜰᴇᴀᴛᴜʀᴇꜱ:**\n"
         "┌─🚀 **ᴀʙᴜꜱɪᴠᴇ ᴡᴏʀᴅꜱ ꜰɪʟᴛᴇʀ**\n"
-        "├─🚀 **ʙɪᴏ ʟɪɴᴋᴇʀ ʙʟᴏᴄᴋᴇʀ**\n"
+        "├─🚀 **ʙɪᴏ ʟɪɴᴋᴇ r ʙʟᴏᴄᴋᴇʀ**\n"
         "└─🚀 **ᴀɴᴛɪ-ᴄʜᴀɴɴᴇʟ ᴍᴏᴅᴇ**\n\n"
         "ᴍᴜᴊʜᴇ ᴀᴅᴍɪɴ ʙᴀɴᴀᴏ ᴀᴜʀ ɢʀᴏᴜᴘ ꜱᴀᴀꜰ ʀᴀᴋʜᴏ!"
     )
@@ -98,7 +109,8 @@ async def help_logic(message, edit=False):
         "━━━━━━━━━━━━━━━━━━━━\n"
         "🔹 **/start** - ᴛᴏ ꜱᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ.\n"
         "🔹 **/info** - ɢᴇᴛ ᴜꜱᴇʀ ᴅᴇᴛᴀɪʟꜱ.\n"
-        "🔹 **/welcome on/off** - ᴛᴏɢɢʟᴇ ᴡᴇʟᴄᴏᴍᴇ.\n\n"
+        "🔹 **/welcome on/off** - ᴛᴏɢɢʟᴇ ᴡᴇʟᴄᴏᴍᴇ.\n"
+        "🔹 **/broadcast** - ꜱᴇɴᴅ ᴍꜱɢ ᴛᴏ ᴀʟʟ (ᴏᴡɴᴇʀ).\n\n"
         "🛡 **ꜰᴇᴀᴛᴜʀᴇꜱ:**\n"
         "• **ᴀɴᴛɪ-ᴀʙᴜꜱᴇ:** 3 ᴡᴀʀɴꜱ = ᴍᴜᴛᴇ.\n"
         "• **ᴀɴᴛɪ-ʙɪᴏ:** ᴅᴇʟᴇᴛᴇ 'ᴊᴏɪɴ ᴍʏ ʙɪᴏ'.\n"
@@ -158,7 +170,7 @@ async def welcome_toggle(client, message):
         await message.reply_text("❌ **ᴡᴇʟᴄᴏᴍᴇ ᴏꜰꜰ!**")
 
 # 5️⃣ CORE FILTER (Abuse, Bio Links, & Anti-Channel)
-@app.on_message(filters.group & ~filters.command(["help", "start", "info", "welcome", "stats"]), group=-1)
+@app.on_message(filters.group & ~filters.command(["help", "start", "info", "welcome", "stats", "broadcast"]), group=-1)
 async def main_filter(client, message):
     # --- ANTI-CHANNEL LOGIC ---
     if not message.from_user:
@@ -196,16 +208,35 @@ async def main_filter(client, message):
             else:
                 warn_caption = (
                     f"🛡️ **#ᴀʙᴜꜱᴇ_ᴡᴀʀɴɪɴɢ**\n👤 **ᴜꜱᴇʀ:** {message.from_user.mention}\n"
-                    f"🚫 **ʀᴇᴀꜱᴏɴ:** ᴀʙᴜꜱɪᴠᴇ/ʙɪᴏ-ꜱᴘᴀᴍ\n⚠️ **ᴡᴀʀɴɪɴɢꜱ:** `{w}/3`"
+                    f"🚫 **ʀᴇᴀꜱᴏɴ:** ᴀʙᴜꜱɪᴠᴇ/ʙɪᴏ-ꜱᴘᴀᴍ\n⚠️ **ᴡᴀʀɴɪɴɢ:** `{w}/3`"
                 )
                 w_msg = await message.reply_photo(photo=WARN_IMG, caption=warn_caption)
                 await asyncio.sleep(10) 
                 await w_msg.delete()
         except: pass
 
-# 6️⃣ OWNER COMMANDS
+# 6️⃣ OWNER COMMANDS (Stats & Broadcast)
 @app.on_message(filters.command("stats") & filters.user(OWNER_ID))
 async def stats_cmd(client, message):
-    await message.reply_text(f"📊 **ꜱᴛᴀᴛꜱ:**\n👤 Users: {len(users_db)}\n👥 Groups: {len(groups_db)}")
+    await message.reply_text(f"📊 **ʙᴏᴛ ꜱᴛᴀᴛɪꜱᴛɪᴄꜱ:**\n━━━━━━━━━━━━━\n👤 **ᴜꜱᴇʀꜱ:** {len(users_db)}\n👥 **ɢʀᴏᴜᴘꜱ:** {len(groups_db)}")
+
+@app.on_message(filters.command("broadcast") & filters.user(OWNER_ID))
+async def broadcast_cmd(client, message):
+    if not message.reply_to_message:
+        return await message.reply_text("❌ **Reply to a message to broadcast!**")
+    
+    msg = await message.reply_text("🚀 **Broadcast started...**")
+    done = 0
+    failed = 0
+    
+    for user_id in list(users_db):
+        try:
+            await message.reply_to_message.copy(user_id)
+            done += 1
+            await asyncio.sleep(0.1) # Flood wait avoid karne ke liye
+        except:
+            failed += 1
+            
+    await msg.edit(f"✅ **Broadcast Completed!**\n\n✨ **Sent to:** `{done}` users\n❌ **Failed:** `{failed}` users")
 
 app.run()
