@@ -24,7 +24,28 @@ app = Client("VictorAdminBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_T
 # --- 🖼 ASSETS ---
 START_IMG = "https://graph.org/file/735dcfd2ce185f9973958-ae4e93ef6832223ada.jpg"
 URL_PATTERN = r"(https?://[^\s]+|t\.me/[^\s]+|www\.[^\s]+)"
-BANNED_WORDS = ["gandu", "bhosdike", "lund", "chut", "mc", "bc", "bsdk", "sex", "porn", "randi"]
+# 🔥 MASTER BANNED LIST (Including all your words)
+BANNED_WORDS = [
+    "randi ke bache", "randi ka bacha", "gandu", "maiya rand", "madhrchod", "ma na chudaya",
+    "chudata", "chudwa", "chudai", "bhosdike", "lund", "louda", "loda", "chut", "gand",
+    "gand marwa", "gand mra", "kalap", "klp", "kalpo", "kalapo", "kalp", "chud", "chudi",
+    "baap", "biz", "bizz", "gaand", "gnd", "bhosda", "bhosdi", "aukaat", "aukat",
+    "motherchodo", "motherchod", "bhnchod", "bahanchod", "bur", "burr", "burrr", "bacho",
+    "behen ki lowdii", "teri behen ko chodu", "teri amaa ka bhosraa", "behen ko chod",
+    "bhn ko chodke", "bahan ko chodke", "randi", "rand", "lowda", "loda", "randi ka bizz",
+    "join my bio", "massage kro", "dm karo", "dmm karo", "baby", "whatsapp", "call", "join",
+    "mc", "bc", "bsdk", "randibaaz", "boobs", "bobe", "boob", "suck", "fuck", "motherfucker",
+    "pussy", "aah", "ah", "buy", "sell", "join my bioo", "biooo", "bio", "bioo", "bioooo",
+    "biooooo", "copyright", "rape", "sex", "sexual", "pornograpy", "harm", "malware", "drug",
+    "mia khalifa", "sunny leone", "xxx", "xxxx", "xxxxxx", "porn", "ganja", "naseela",
+    "nasila", "nasela", "drugs", "boys come", "girls come", "boy's come", "girl's come",
+    "randi ki bachi", "sexy", "sexx", "sexxx", "sexxxxx", "teri maa chodunga", "chodunga",
+    "chodungi", "chod", "bahan ki chut", "chikni", "chikna", "chod dalunga", "choddalunga",
+    "chod daalunga", "choddaalunga", "loude", "lowde", "lode", "rs", "charge", "videocall",
+    "voicecall", "needs group", "10k", "8k", "need groups", "buyer", "seller", "selling",
+    "paid", "hack", "mod apk", "mod", "injector", "carding", "hacking", "hacker", "data",
+    "number", "photo", "video", "call girl", "call boy", "aajao baby"
+]
 MESSAGES_COUNT = {}
 
 # --- 🛡 HELPERS ---
