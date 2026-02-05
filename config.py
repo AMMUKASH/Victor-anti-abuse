@@ -6,8 +6,8 @@ API_HASH = os.getenv("API_HASH", "d3d5548fe0d98eb1fb793c2c37c9e5c8")
 BOT_TOKEN = os.getenv("BOT_TOKEN", "8508791428:AAEVP8eN8H4yE1AVwSs15KpNV3TamY4hXB8")
 
 # --- Database Setup ---
-# Password 'VICTOR01' ke sath Mongo URL
-MONGO_URL = os.getenv("MONGO_URL", "mongodb+srv://Victor:VICTOR01@cluster0.mongodb.net/?retryWrites=true&w=majority")
+# Naye cluster link ke saath updated password
+MONGO_URL = os.getenv("MONGO_URL", "mongodb+srv://misssqn:VICTOR01@cluster0.3otqmso.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 
 # --- Community & Identity ---
 OWNER_ID = int(os.getenv("OWNER_ID", "8482447535"))
