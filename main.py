@@ -17,7 +17,7 @@ except ImportError:
     LOG_GROUP_ID = int(os.environ.get("LOG_GROUP_ID", 0))
     MONGO_URL = os.environ.get("MONGO_URL", "")
 
-# --- 🌐 AUTO-HOST SERVER (For Render/Koyeb) ---
+# --- 🌐 AUTO-HOST SERVER ---
 class RenderServer(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
@@ -42,49 +42,29 @@ app = Client("AntuAbuseBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOK
 
 # --- 🖼 ASSETS ---
 START_IMG = "https://graph.org/file/735dcfd2ce185f9973958-ae4e93ef6832223ada.jpg"
-WELCOME_IMG = "https://graph.org/file/4c5f6f721550cee5255f7-4391f4d3496ba37dfe.jpg"
 URL_PATTERN = r"(https?://[^\s]+|t\.me/[^\s]+|www\.[^\s]+|@[a-zA-Z0-9_]+)"
 
-# 🔥 MEGA MASTER BANNED LIST (Added your full list)
-BANNED_WORDS = [
-    "randi", "randwa", "gandu", "madarchod", "maderchod", "madhrchod", "mc", "bc", "bhenchod", "behenchod", 
-    "bhnchod", "bahanchod", "bhosdike", "bhosadi", "bsdk", "lund", "loda", "lowda", "lauda", "louda", "loude", 
-    "lowde", "lode", "chut", "chutiya", "chutmarika", "gaand", "gand", "gandmare", "gandmareu", "muth", 
-    "muthiya", "muthal", "behen k lode", "behen ke lode", "behen k takke", "tattu", "tatte", "jhant", "jhaant",
-    "harami", "kamina", "kamine", "najaiz", "raand", "saala", "sala", "saali", "sali", "gnd", "bhosda", 
-    "bhosdi", "aukaat", "aukat", "motherchodo", "motherchod", "bur", "burr", "burrr", "bacho", 
-    "behen ki lowdii", "teri behen ko chodu", "teri amaa ka bhosraa", "behen ko chod", "bhn ko chodke", 
-    "bahan ko chodke", "randibaaz", "kalap", "klp", "kalpo", "kalapo", "kalp", "chud", "chudi", "baap", "biz", "bizz",
-    "sex", "porn", "xxx", "xxxx", "xxxxxx", "xvideo", "chudai", "chodo", "chodas", "rape", "gangbang", 
-    "condom", "bra", "panty", "nude", "nudes", "pic dalo", "video call", "vc krlo", "muthi", "hastmaithun", 
-    "tharak", "tharki", "lund topa", "vagina", "penis", "boobs", "bobe", "boob", "suck", "pussy", "aah", "ah", 
-    "pornograpy", "mia khalifa", "sunny leone", "sexy", "sexx", "sexxx", "sexxxxx", "chikni", "chikna", 
-    "call girl", "call boy", "videocall", "voicecall", "sexual", "pornograpy",
-    "randi ke bache", "randi ka bacha", "randi ki bachi", "maiya rand", "maa chuda", "behen chuda", 
-    "baap ko mat sikha", "teri ma ki", "teri bhen ki", "maa ki chut", "bhen ki chut", "ma na chudaya", 
-    "chudata", "chudwa", "teri maa chodunga", "chodunga", "chodungi", "chod", "bahan ki chut", 
-    "chod dalunga", "choddalunga", "chod daalunga", "choddaalunga",
-    "join my channel", "sub4sub", "promotion", "paid promotion", "earn money", "free recharge", "loot", 
-    "join fast", "invest money", "trading bot", "telegram bot", "follow me", "subscribe", "dm for", 
-    "contact for", "whatsapp group", "join my bio", "massage kro", "dm karo", "dmm karo", "whatsapp", 
-    "call", "join", "buy", "sell", "join my bioo", "biooo", "bio", "bioo", "bioooo", "biooooo", "biooooo", 
-    "needs group", "10k", "8k", "need groups", "buyer", "seller", "selling", "paid", "rs", "charge", 
-    "aajao baby", "baby", "boys come", "girls come", "boy's come", "girl's come", "massage kro",
-    "hack", "mod apk", "mod", "injector", "carding", "hacking", "hacker", "data", "number", "photo", 
-    "video", "malware", "drug", "ganja", "naseela", "nasila", "nasela", "drugs", "copyright", "harm",
-    "katwa", "mulla", "bhakt", "andhbhakt", "atankwadi", "terrorist", "kafir", "kaffir", "suar", 
-    "suar ki aulad", "dog", "kutta", "kutte ka bacha",
-    "fuck", "fucker", "fucking", "bitch", "asshole", "bastard", "dick", "pussy", "slut", "whore", 
-    "motherfucker", "shutup", "stfu", "dumbass", "idiot"
-]
+# List choti dikh rahi hai par aap apni purani list yaha puri paste kar lena
+BANNED_WORDS = ["randi", "gandu", "mc", "bc", "bhenchod", "lund", "chutiya", "porn", "sex"]
 
-# --- 🔘 REUSABLE BUTTONS ---
-async def get_vip_buttons():
-    return InlineKeyboardMarkup([
-        [InlineKeyboardButton("♻ 𝐀ᴅᴅ 𝐌𝝴 𝝸𝝶 𝐘𝞂𝞄𝐑 𝐆𝐑𝞂𝞄𝞀 ♻", url="https://t.me/AntuAbusebot?startgroup=true")],
-        [InlineKeyboardButton("❂ 𝐔𝛒ᴅ𝛂𝛕𝛆 ❂", url="https://t.me/radhesupport"), 
-         InlineKeyboardButton("❂ 𝐒𝛖𝛒𝛒𝛔ʀ𝛕 ❂", url="https://t.me/+PKYLDIEYiTljMzMx")]
-    ])
+# --- 📝 LOGGING SYSTEM (Public & Private) ---
+async def send_log(client, chat_title, chat_id, user, action, reason, count=None):
+    if not LOG_GROUP_ID:
+        return
+    try:
+        log_text = (
+            f"<b>#ANTU_LOGS</b>\n\n"
+            f"📌 <b>Action:</b> {action}\n"
+            f"👤 <b>User:</b> {user.mention} (<code>{user.id}</code>)\n"
+            f"🌐 <b>Chat:</b> {chat_title} (<code>{chat_id}</code>)\n"
+            f"⚠️ <b>Reason:</b> {reason}"
+        )
+        if count:
+            log_text += f"\n📊 <b>Warn Level:</b> {count}/3"
+        
+        await client.send_message(LOG_GROUP_ID, log_text)
+    except Exception as e:
+        print(f"Log Error: {e}")
 
 # --- 🛡 HELPERS ---
 async def is_admin(chat_id, user_id):
@@ -97,172 +77,78 @@ async def get_setting(chat_id, key):
     res = settings_db.find_one({"c": chat_id})
     return res.get(key, True) if res else True
 
-async def check_user_bio(user_id):
-    try:
-        user = await app.get_users(user_id)
-        if user and user.bio:
-            return bool(re.search(URL_PATTERN, user.bio.lower()))
-    except: pass
-    return False
-
 # --- 🏠 START COMMAND ---
 @app.on_message(filters.command("start"))
 async def start(client, message):
-    if not users_db.find_one({"u": message.from_user.id}):
-        users_db.insert_one({"u": message.from_user.id})
-    if message.chat.type in [ChatType.SUPERGROUP, ChatType.GROUP]:
-        if not chats_db.find_one({"c": message.chat.id}):
-            chats_db.insert_one({"c": message.chat.id})
+    user = message.from_user
+    if not users_db.find_one({"u": user.id}):
+        users_db.insert_one({"u": user.id})
+        # Private Log: New User
+        await send_log(client, "ᴘʀɪᴠᴀᴛᴇ ᴄʜᴀᴛ", "ᴅᴍ", user, "Bot Started", "New User Entry")
 
-    buttons = await get_vip_buttons()
-    caption = (
-        f"👋 **ʜᴇʟʟᴏ** {message.from_user.mention}\n\n"
-        f"ɪ ᴀᴍ **ᴀɴᴛᴜ ᴀʙᴜꜱᴇ ʙᴏᴛ**.\n\n"
-        f"✨ **ᴍᴀɪɴ ꜰᴇᴀᴛᴜʀᴇꜱ:**\n"
-        f"┌─🚀 **ᴀʙᴜꜱɪᴠᴇ ᴡᴏʀᴅꜱ ꜰɪʟᴛᴇʀ**\n"
-        f"├─🚀 **ʙɪᴏ ʟɪɴᴋᴇʀ ʙʟᴏᴄᴋᴇʀ**\n"
-        f"└─🚀 **ᴀɴᴛɪ-ᴄʜᴀɴɴᴇʟ ᴍᴏᴅᴇ**\n\n"
-        f"ᴍᴜᴊʜᴇ ᴀᴅᴍɪɴ ʙᴀɴᴀᴏ ᴀᴜʀ ɢʀᴏᴜᴘ ꜱᴀᴀꜰ ʀᴀᴋʜᴏ!\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━━━"
-    )
-    await message.reply_photo(photo=START_IMG, caption=caption, reply_markup=buttons)
+    buttons = InlineKeyboardMarkup([[InlineKeyboardButton("♻ 𝐀ᴅᴅ 𝐌𝝴 𝝸𝝶 𝐘𝞂𝞄𝐑 𝐆𝐑𝞂𝞄𝞀 ♻", url=f"https://t.me/{app.me.username}?startgroup=true")]])
+    await message.reply_photo(photo=START_IMG, caption="👋 **Antu Abuse Bot is Online!**", reply_markup=buttons)
 
-# --- 👋 WELCOME MESSAGE ---
-@app.on_message(filters.new_chat_members)
-async def welcome_member(client, message):
-    for member in message.new_chat_members:
-        if member.is_self: continue
-        buttons = InlineKeyboardMarkup([
-            [InlineKeyboardButton("♻ 𝐀ᴅᴅ 𝐌𝝴 𝝸𝝶 𝐘𝞂𝞄𝐑 𝐆𝐑𝞂𝞄𝞀 ♻", url="https://t.me/AntuAbusebot?startgroup=true")],
-            [InlineKeyboardButton("📜 𝐆𝐑𝐎𝐔𝐏 𝐑𝐔𝐋𝐄𝐒", callback_data="show_rules")],
-            [InlineKeyboardButton("❂ 𝐔𝛒ᴅ𝛂𝛕𝛆 ❂", url="https://t.me/radhesupport"), 
-             InlineKeyboardButton("❂ 𝐒𝛖𝛒𝛒𝛔ʀ𝛕 ❂", url="https://t.me/+PKYLDIEYiTljMzMx")]
-        ])
-        caption = (f"✨ **𝐖𝐄𝐋𝐂𝐎𝐌𝐄** {member.mention}\n━━━━━━━━━━━━━━━━━━━━\n"
-                   f"🌐 **ɢʀᴏᴜᴘ:** {message.chat.title}\n🛡️ **ɪ ᴀᴍ ᴀɴᴛᴜ ᴀʙᴜsᴇ ʙᴏᴛ**\n\n"
-                   f"ᴍᴀɪɴ ɪs ɢʀᴏᴜᴘ ᴋᴏ ᴀʙᴜsᴇ ᴀᴜʀ ʟɪɴᴋs sᴇ sᴀғ ʀᴀᴋʜᴜɴɢᴀ!")
-        await message.reply_photo(photo=WELCOME_IMG, caption=caption, reply_markup=buttons)
-
-# --- 📜 RULES CALLBACK ---
-@app.on_callback_query(filters.regex("show_rules"))
-async def rules_cb(client, cb):
-    rules = ("📜 **𝐆𝐑𝐎𝐔𝐏 𝐑𝐔𝐋𝐄𝐒**\n━━━━━━━━━━━━━━━━━━━━\n"
-             "1️⃣ **ɴᴏ ᴀʙᴜsᴇ:** ɢᴀᴀʟɪ ᴅᴇɴᴇ ᴘᴀʀ ᴡᴀʀɴɪɴɢ ᴍɪʟᴇɢɪ.\n"
-             "2️⃣ **ɴᴏ ʟɪɴᴋs:** ᴋᴏɪ ʙʜɪ ʟɪɴᴋ ᴀʟʟᴏᴡ ɴᴀʜɪ ʜᴀɪ.\n"
-             "3️⃣ **ʙɪᴏ ᴄʜᴇᴄᴋ:** ᴀᴘɴɪ ʙɪᴏ sᴇ ᴀᴅᴠᴇʀᴛɪsᴇᴍᴇɴᴛ ʜᴀᴛᴀʏᴇɪɴ.\n\n"
-             "⚠️ **3 Warns = Permanent Mute!**")
-    await cb.answer("Rules Updated!", show_alert=True)
-    await cb.message.edit_caption(caption=rules, reply_markup=cb.message.reply_markup)
-
-# --- ⚙️ SETTINGS PANEL ---
-@app.on_message(filters.command("settings") & filters.group)
-async def settings_panel(client, message):
+# --- 🔄 RESET WARNS COMMAND ---
+@app.on_message(filters.command("reset") & filters.group)
+async def reset_warns(client, message):
     if not await is_admin(message.chat.id, message.from_user.id):
-        return await message.reply("❌ Aap admin nahi hain!")
+        return await message.reply("❌ Sirf Admins warnings reset kar sakte hain!")
     
-    res = settings_db.find_one({"c": message.chat.id}) or {}
-    l_st = "✅ ON" if res.get("link", True) else "❌ OFF"
-    a_st = "✅ ON" if res.get("abuse", True) else "❌ OFF"
+    reply = message.reply_to_message
+    if not reply:
+        return await message.reply("👤 Us bande ke message pe reply karo jiske warns reset karne hain.")
     
-    btns = InlineKeyboardMarkup([
-        [InlineKeyboardButton(f"🔗 Link: {l_st}", callback_data="set_link"),
-         InlineKeyboardButton(f"🤬 Abuse: {a_st}", callback_data="set_abuse")],
-        [InlineKeyboardButton("🗑 Close Panel", callback_data="close_panel")]
-    ])
-    await message.reply_photo(photo=START_IMG, caption="⚙️ **𝐀𝐍𝐓𝐔 𝐀𝐁𝐔𝐒𝐄 𝐒𝐄𝐓𝐓𝐈𝐍𝐆𝐒**\n━━━━━━━━━━━━━━━━━━━━", reply_markup=btns)
-
-@app.on_callback_query(filters.regex(r"^set_"))
-async def update_settings(client, cb):
-    if not await is_admin(cb.message.chat.id, cb.from_user.id):
-        return await cb.answer("Admin Only!", show_alert=True)
+    user_id = reply.from_user.id
+    warns_db.delete_one({"u": user_id, "c": message.chat.id})
     
-    action = cb.data.split("_")[1]
-    curr = settings_db.find_one({"c": cb.message.chat.id}) or {}
-    new_val = not curr.get(action, True)
-    settings_db.update_one({"c": cb.message.chat.id}, {"$set": {action: new_val}}, upsert=True)
-    
-    res = settings_db.find_one({"c": cb.message.chat.id})
-    l_st = "✅ ON" if res.get("link", True) else "❌ OFF"
-    a_st = "✅ ON" if res.get("abuse", True) else "❌ OFF"
-    
-    await cb.message.edit_reply_markup(reply_markup=InlineKeyboardMarkup([
-        [InlineKeyboardButton(f"🔗 Link: {l_st}", callback_data="set_link"),
-         InlineKeyboardButton(f"🤬 Abuse: {a_st}", callback_data="set_abuse")],
-        [InlineKeyboardButton("🗑 Close Panel", callback_data="close_panel")]
-    ]))
-    await cb.answer("Settings Updated!")
-
-@app.on_callback_query(filters.regex("close_panel"))
-async def close_panel_cb(client, cb):
-    await cb.message.delete()
+    await message.reply(f"✅ {reply.from_user.mention} ke warnings reset kar diye gaye hain.")
+    await send_log(client, message.chat.title, message.chat.id, reply.from_user, "Warns Reset", f"By Admin {message.from_user.id}")
 
 # --- 🛡 SECURITY MANAGER ---
-@app.on_message(filters.group & ~filters.service)
+@app.on_message(filters.group & ~filters.service, group=1)
 async def security_manager(client, message):
-    if not message.from_user or await is_admin(message.chat.id, message.from_user.id): return
+    if not message.from_user: return
+    if await is_admin(message.chat.id, message.from_user.id): return
     
-    chat_id, user_id = message.chat.id, message.from_user.id
     text = (message.text or message.caption or "").lower()
+    if not text: return 
+
+    chat_id, user_id = message.chat.id, message.from_user.id
     violation = None
 
     link_on = await get_setting(chat_id, "link")
     abuse_on = await get_setting(chat_id, "abuse")
 
-    # Violation Checks
-    if abuse_on and any(w in text for w in BANNED_WORDS): violation = "ᴀʙᴜsɪᴠᴇ ᴡᴏʀᴅs"
-    elif link_on and re.search(URL_PATTERN, text): violation = "ᴜɴᴡᴀɴᴛᴇᴅ ʟɪɴᴋs"
-    elif await check_user_bio(user_id): violation = "🔞 ᴀᴅᴠᴇʀᴛɪsᴇᴍᴇɴᴛ ɪɴ ʙɪᴏ"
+    # Smart Abuse Filter
+    if abuse_on:
+        for word in BANNED_WORDS:
+            if re.search(rf"\b{re.escape(word)}\b", text):
+                violation = "𝐀𝐛𝐮𝐬𝐢𝐯𝐞 𝐖𝐨𝐫𝐝𝐬"
+                break
+
+    if not violation and link_on and re.search(URL_PATTERN, text):
+        violation = "𝐔𝐧𝐰𝐚𝐧𝐭𝐞𝐝 𝐋𝐢𝐧𝐤𝐬"
 
     if violation:
-        try: await message.delete()
-        except: pass
-        
-        warn_data = warns_db.find_one({"u": user_id, "c": chat_id})
-        count = (warn_data["n"] if warn_data else 0) + 1
-        btns = await get_vip_buttons()
-
-        if count >= 3:
-            try:
+        try:
+            await message.delete() # Sirf ganda message delete hoga
+            warn_data = warns_db.find_one({"u": user_id, "c": chat_id})
+            count = (warn_data["n"] if warn_data else 0) + 1
+            
+            if count >= 3:
                 await client.restrict_chat_member(chat_id, user_id, ChatPermissions(can_send_messages=False))
                 warns_db.delete_one({"u": user_id, "c": chat_id})
-                cap = (f"🚫 **ғɪɴᴀʟ ᴀᴄᴛɪᴏɴ : ᴍᴜᴛᴇᴅ**\n━━━━━━━━━━━━━━━━━━━━\n"
-                       f"👤 **ᴜsᴇʀ:** {message.from_user.mention}\n⚠️ **ʀᴇᴀsᴏɴ:** {violation}\n📊 **ᴡᴀʀɴs:** 3/3")
-                await message.reply_photo(photo=START_IMG, caption=cap, reply_markup=btns)
-            except: pass
-        else:
-            warns_db.update_one({"u": user_id, "c": chat_id}, {"$set": {"n": count}}, upsert=True)
-            cap = (f"🛡️ **ᴀɴᴛᴜ ᴀʙᴜsᴇ ᴡᴀʀɴɪɴɢ**\n━━━━━━━━━━━━━━━━━━━━\n"
-                   f"👤 **ᴜsᴇʀ:** {message.from_user.mention}\n🚫 **ᴠɪᴏʟᴀᴛɪᴏɴ:** {violation}\n⚠️ **ᴡᴀʀɴɪɴɢ:** {count}/3")
-            await message.reply_photo(photo=START_IMG, caption=cap, reply_markup=btns)
-
-# --- 📊 STATS & BROADCAST ---
-@app.on_message(filters.command("stats") & filters.user(OWNER_ID))
-async def stats_cmd(client, message):
-    u = users_db.count_documents({})
-    c = chats_db.count_documents({})
-    await message.reply_photo(photo=START_IMG, caption=f"📊 **ᴀɴᴛᴜ sᴛᴀᴛs**\n━━━━━━━━━━━━\n👤 **ᴜsᴇʀs:** `{u}`\n🌐 **ᴄʜᴀᴛs:** `{c}`")
-
-@app.on_message(filters.command("broadcast") & filters.user(OWNER_ID))
-async def broadcast_cmd(client, message):
-    if not message.reply_to_message:
-        return await message.reply("Reply to a message to broadcast!")
-    
-    ex = await message.reply("🚀 **Broadcast Starting...**")
-    count = 0
-    # Broadcast to all tracked groups
-    for chat in chats_db.find():
-        try:
-            await message.reply_to_message.copy(chat["c"])
-            count += 1
-            await asyncio.sleep(0.3)
-        except FloodWait as e:
-            await asyncio.sleep(e.value)
-        except (ChatAdminRequired, PeerIdInvalid, UserIsBlocked):
-            chats_db.delete_one({"c": chat["c"]})
-        except Exception:
-            pass
-        
-    await ex.edit(f"✅ **Broadcast Done!**\nTotal Reached: `{count}`")
+                await message.reply(f"🚫 {message.from_user.mention} ᴍᴜᴛᴇᴅ! (3/3 Warns for {violation})")
+                await send_log(client, message.chat.title, chat_id, message.from_user, "User Muted", violation, 3)
+            else:
+                warns_db.update_one({"u": user_id, "c": chat_id}, {"$set": {"n": count}}, upsert=True)
+                await message.reply(f"⚠️ {message.from_user.mention}, **{violation}** allowed nahi hain! ({count}/3)")
+                await send_log(client, message.chat.title, chat_id, message.from_user, "Warning Issued", violation, count)
+        except ChatAdminRequired:
+            pass # Bot admin nahi hai toh kuch nahi karega
+        except Exception as e:
+            print(f"Error: {e}")
 
 if __name__ == "__main__":
     app.run()
