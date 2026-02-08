@@ -13,5 +13,5 @@ MONGO_URL = os.getenv("MONGO_URL", "mongodb+srv://misssqn:VICTOR01@cluster0.3otq
 OWNER_ID = int(os.getenv("OWNER_ID", "8482447535"))
 LOG_GROUP_ID = int(os.getenv("LOG_GROUP_ID", "-1003867805165"))
 OWNER_LINK = os.getenv("OWNER_LINK", "https://t.me/XenoEmpir")
-SUPPORT_CHANNEL = os.getenv("SUPPORT_CHANNEL", "https://t.me/radhesupport")
-SUPPORT_CHAT = os.getenv("SUPPORT_CHAT", "https://t.me/+PKYLDIEYiTljMzMx")
+❂ 𝐒𝛖𝛒𝛒𝛔ʀ𝛕 ❂ = os.getenv("SUPPORT_CHANNEL", "https://t.me/radhesupport")
+❂ 𝐔𝛒ᴅ𝛂𝛕𝛆 ❂ = os.getenv("SUPPORT_CHAT", "https://t.me/+PKYLDIEYiTljMzMx")
